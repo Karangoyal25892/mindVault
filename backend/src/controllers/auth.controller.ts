@@ -1,8 +1,7 @@
-import { Request, Response, NextFunction } from 'express';
-import { loginUser, registerUser } from '../services/auth.service';
-import { env } from '../config/env';
+import { NextFunction, Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
-
+import { env } from '../config/env';
+import { loginUser, registerUser } from '../services/auth.service';
 
 export const register = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -44,6 +43,22 @@ export const login = async (req: Request, response: Response, next: NextFunction
             message: error instanceof Error
                 ? error.message
                 : 'Error logging in user',
+        });
+    }
+}
+
+export const getProfile = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        res.status(200).json({
+            message: 'Protected profile route accessed',
+        });
+
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({
+            message: error instanceof Error
+                ? error.message
+                : 'Error fetching user profile',
         });
     }
 }
