@@ -10,27 +10,19 @@ export const create = async (req: Request, res: Response, next: NextFunction) =>
             message: 'Note created successfully',
         });
     } catch (error) {
-        res.status(500).json({
-            message: error instanceof Error
-                ? error.message
-                : 'Error creating note',
-        });
+        next(error);
     }
 }
 
 export const getNotes = async (req: Request, res: Response, next: NextFunction) => {
     const user = req.user as { userId: string };
-    const userId = user.userId; 
+    const userId = user.userId;
     if (!userId) {
         return res.status(401).json({ message: 'Unauthorized' });
     }
     await getNotesForUser(userId).then(notes => {
         res.status(200).json({ notes });
     }).catch(error => {
-        res.status(500).json({
-            message: error instanceof Error
-                ? error.message
-                : 'Error fetching notes',
-        });
+        next(error);
     });
 }

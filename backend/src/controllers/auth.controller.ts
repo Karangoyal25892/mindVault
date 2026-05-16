@@ -18,12 +18,7 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
             user: safeUser,
         });
     } catch (error) {
-        console.log(error);
-        res.status(500).json({
-            message: error instanceof Error
-                ? error.message
-                : 'Error registering user',
-        });
+        next(error);
     }
 };
 
@@ -38,12 +33,7 @@ export const login = async (req: Request, response: Response, next: NextFunction
             token: JWT_Token,
         });
     } catch (error) {
-        console.log(error);
-        response.status(500).json({
-            message: error instanceof Error
-                ? error.message
-                : 'Error logging in user',
-        });
+        next(error);
     }
 }
 
@@ -54,11 +44,6 @@ export const getProfile = async (req: Request, res: Response, next: NextFunction
         });
 
     } catch (error) {
-        console.log(error);
-        res.status(500).json({
-            message: error instanceof Error
-                ? error.message
-                : 'Error fetching user profile',
-        });
+        next(error);
     }
 }

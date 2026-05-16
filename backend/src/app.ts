@@ -2,6 +2,7 @@ import dotenv from 'dotenv';
 import express from 'express';
 import authRoutes from './routes/auth.routes';
 import noteRoutes from './routes/note.routes';
+import errorMiddleware from './middleware/error.middleware';
 
 dotenv.config();
 
@@ -13,5 +14,5 @@ app.get('/', (req, res) => {
     console.log(req);
     res.send('MindVault Started!');
 });
-
+app.use(errorMiddleware);
 export default app;
