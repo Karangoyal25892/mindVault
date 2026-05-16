@@ -2,3 +2,5 @@
 target/
 packaging/
 node_modules/
+dist/
+/dist/
