@@ -10,14 +10,29 @@ export const createNote = async (user: string, noteData: { title: string, conten
 }
 
 
-export const getNotesForUser = async (userId: string) => {
+export const getNotesForUser = async (userId: string, page: number, limit: number) => {
     try {
-        const notes = await Note.find({ owner: userId }).sort({ createdAt: -1 });
+        const notes = await Note.find({ owner: userId })
+            .sort({ createdAt: -1 })
+            .skip((page - 1) * limit)
+            .limit(limit);
         return notes;
     }
 
     catch (error) {
         throw error;
     }
-
 }
+
+export const deleteNoteForUser = async (userId: string, noteId: string) => {
+    try {
+        const note = await Note.findOneAndDelete({ _id: noteId, owner: userId });
+        if (!note) {
+            throw new Error('Note not found or unauthorized');
+        }
+        return note;
+    } catch (error) {
+        throw error;
+    }
+}
+
