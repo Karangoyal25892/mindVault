@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
-import jwt, { JwtPayload } from 'jsonwebtoken';
+import jwt from 'jsonwebtoken';
 import { env } from '../config/env';
+import { AuthPayload } from '../types/auth.types';
 
 export const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
     const authHeader = req.headers['authorization'];
@@ -8,11 +9,10 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction) 
     if (!token) {
         return res.status(401).json({ message: 'Access token missing' });
     }
-    jwt.verify(token, env.jwtSecret, (err, user) => {
-        if (err) {
-            return res.status(403).json({ message: 'Invalid access token' });
-        }
-        req.user = user as JwtPayload & { userId: string };
-        next();
-    });
+    const decoded = jwt.verify(token, env.jwtSecret) as AuthPayload;
+    if (!decoded) {
+        return res.status(403).json({ message: 'Invalid access token' });
+    }
+    req.user = decoded as AuthPayload;
+    next();
 }

@@ -1,14 +1,13 @@
 import { Note } from '../models/note';
 
-export const createNote = async (user: string, noteData: { title: string, content: string }) => {
+export const createNote = async (userId: string, noteData: { title: string, content: string }) => {
     try {
-        const note = await Note.create({ ...noteData, owner: user });
+        const note = await Note.create({ ...noteData, owner: userId });
         return note;
     } catch (error) {
         throw error;
     }
 }
-
 
 export const getNotesForUser = async (userId: string, page: number, limit: number) => {
     try {

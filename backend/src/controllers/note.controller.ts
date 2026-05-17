@@ -3,9 +3,12 @@ import { createNote, deleteNoteForUser, getNotesForUser } from '../services/note
 
 export const create = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const user = req.user as { userId: string };;
+        const userId = req.user?.userId;
+        if (!userId) {
+            return next(new Error('Unauthorized'));
+        }
         const { title, content } = req.body || {};
-        await createNote(user.userId, { title, content });
+        await createNote(userId, { title, content });
         res.status(201).json({ message: 'Note created successfully' });
     } catch (error) {
         next(error);
@@ -13,8 +16,10 @@ export const create = async (req: Request, res: Response, next: NextFunction) =>
 }
 
 export const getNotes = async (req: Request, res: Response, next: NextFunction) => {
-    const user = req.user as { userId: string };
-    const userId = user.userId;
+    const userId = req.user?.userId;
+    if (!userId) {
+        return next(new Error('Unauthorized'));
+    }
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 10;
     try {
@@ -26,8 +31,10 @@ export const getNotes = async (req: Request, res: Response, next: NextFunction) 
 }
 
 export const deleteNote = async (req: Request, res: Response, next: NextFunction) => {
-    const user = req.user as { userId: string };
-    const userId = user.userId;
+    const userId = req.user?.userId;
+    if (!userId) {
+        return next(new Error('Unauthorized'));
+    }
     const noteId = req.params.id as string;
     try {
         await deleteNoteForUser(userId, noteId);
