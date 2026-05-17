@@ -1,45 +1,58 @@
 # MindVault Backend
 
-A RESTful API backend for MindVault — a note-taking application. Built with TypeScript, Express, MongoDB, and JWT authentication.
+A RESTful API backend for MindVault — a note-taking application with PDF document upload and text extraction. Built with TypeScript, Express, MongoDB, and JWT authentication.
 
 ## Tech Stack
 
-- **Runtime:** Node.js + TypeScript
-- **Framework:** Express v5
-- **Database:** MongoDB (Mongoose)
-- **Auth:** JSON Web Tokens (access + refresh tokens)
-- **Validation:** Zod
-- **Security:** Helmet, bcryptjs, CORS
-- **Logging:** Morgan
+| Layer | Library |
+|---|---|
+| Runtime | Node.js + TypeScript |
+| Framework | Express v5 |
+| Database | MongoDB (Mongoose) |
+| Authentication | JSON Web Tokens (access + refresh tokens) |
+| Password Hashing | bcrypt |
+| Validation | Zod |
+| File Upload | Multer |
+| PDF Parsing | pdf-parse |
+| Security | Helmet, CORS |
+| Logging | Morgan |
 
 ## Project Structure
 
 ```
 src/
-├── app.ts                    # Express app setup (middleware, routes)
-├── server.ts                 # Server entry point
+├── app.ts                        # Express app setup (middleware, routes)
+├── server.ts                     # Server entry point
 ├── config/
-│   └── env.ts                # Environment variable config
+│   └── env.ts                    # Environment variable config
 ├── controllers/
-│   ├── auth.controller.ts    # Register, login, profile, refresh token
-│   └── note.controller.ts    # Create, get, delete notes
+│   ├── auth.controller.ts        # Register, login, profile, refresh token
+│   ├── note.controller.ts        # Create, list, delete notes
+│   └── upload.controller.ts      # PDF upload and text extraction
+├── database/
+│   └── connectDB.ts              # MongoDB connection
 ├── middleware/
-│   ├── auth.middleware.ts    # JWT verification
-│   ├── validate.middleware.ts# Zod request validation
-│   └── error.middleware.ts   # Global error handler
+│   ├── auth.middleware.ts        # JWT verification
+│   ├── validate.middleware.ts    # Zod request body validation
+│   ├── error.middleware.ts       # Global error handler
+│   └── upload.middleware.ts      # Multer disk storage config
 ├── models/
-│   ├── user.ts               # User schema
-│   └── note.ts               # Note schema
+│   ├── user.ts                   # User schema
+│   ├── note.ts                   # Note schema
+│   └── document.ts               # Uploaded document schema
 ├── routes/
-│   ├── auth.routes.ts        # /api/auth/*
-│   └── note.routes.ts        # /api/notes/*
+│   ├── auth.routes.ts            # /api/auth/*
+│   ├── note.routes.ts            # /api/note/*
+│   └── upload.routes.ts          # /api/upload/*
 ├── services/
-│   ├── auth.service.ts       # Register/login business logic
-│   └── note.service.ts       # Note CRUD business logic
+│   ├── auth.service.ts           # Register/login business logic
+│   ├── note.service.ts           # Note CRUD business logic
+│   └── upload.service.ts         # Document persistence logic
 ├── types/
-│   └── express.d.ts          # Express Request type augmentation
+│   ├── auth.types.ts             # AuthPayload interface
+│   └── express.d.ts              # Express Request type augmentation
 └── validators/
-    └── auth.validator.ts     # Zod schemas for auth endpoints
+    └── auth.validator.ts         # Zod schemas for auth endpoints
 ```
 
 ## Getting Started
@@ -68,36 +81,42 @@ JWT_SECRET=your_secret_key
 ### Running the Server
 
 ```bash
-# Development (with hot reload)
+# Development (hot reload)
 npm run dev
 
-# Production build
+# Production
 npm run build
 npm start
+```
+
+Uploaded files are saved to the `uploads/` directory in the project root. Create it if it doesn't exist:
+
+```bash
+mkdir uploads
 ```
 
 ## API Reference
 
 Base URL: `http://localhost:5000/api`
 
-### Authentication
+All protected routes require: `Authorization: Bearer <token>`
 
-All protected routes require the `Authorization: Bearer <token>` header.
+---
+
+### Auth — `/api/auth`
 
 #### POST `/auth/register`
 
 Register a new user.
 
-**Request Body:**
+**Body:**
 ```json
 {
-  "name": "John Doe",
+  "name": "John Doe",       // min 2 characters
   "email": "john@example.com",
-  "password": "secret123"
+  "password": "secret123"  // min 6 characters
 }
 ```
-
-**Validation:** name ≥ 2 chars, valid email, password ≥ 6 chars
 
 **Response `201`:**
 ```json
@@ -113,7 +132,7 @@ Register a new user.
 
 Login and receive access + refresh tokens.
 
-**Request Body:**
+**Body:**
 ```json
 {
   "email": "john@example.com",
@@ -125,18 +144,16 @@ Login and receive access + refresh tokens.
 ```json
 {
   "message": "User logged in successfully",
-  "token": "<jwt_access_token>",
-  "refreshToken": "<jwt_refresh_token>"
+  "token": "<access_token>",       // expires in 1h
+  "refreshToken": "<refresh_token>" // expires in 7d
 }
 ```
-
-Token expiry: access token `1h`, refresh token `7d`.
 
 ---
 
 #### GET `/auth/profile` `[Protected]`
 
-Returns a confirmation that the protected route was accessed.
+Verify a valid access token.
 
 **Response `200`:**
 ```json
@@ -149,12 +166,12 @@ Returns a confirmation that the protected route was accessed.
 
 #### GET `/auth/refresh-token`
 
-Get a new access token using a refresh token.
+Exchange a refresh token for a new access token.
 
-**Request Body:**
+**Body:**
 ```json
 {
-  "refreshToken": "<jwt_refresh_token>"
+  "refreshToken": "<refresh_token>"
 }
 ```
 
@@ -162,21 +179,19 @@ Get a new access token using a refresh token.
 ```json
 {
   "message": "Token refreshed successfully",
-  "token": "<new_jwt_access_token>"
+  "token": "<new_access_token>"
 }
 ```
 
 ---
 
-### Notes
+### Notes — `/api/note`
 
-All note routes are protected and scoped to the authenticated user.
-
-#### POST `/notes` `[Protected]`
+#### POST `/note` `[Protected]`
 
 Create a new note.
 
-**Request Body:**
+**Body:**
 ```json
 {
   "title": "My Note",
@@ -193,11 +208,16 @@ Create a new note.
 
 ---
 
-#### GET `/notes` `[Protected]`
+#### GET `/note` `[Protected]`
 
-Get paginated notes for the authenticated user.
+Get paginated notes for the authenticated user, sorted newest first.
 
-**Query Params:** `page` (default: 1), `limit` (default: 10)
+**Query Params:**
+
+| Param | Default | Description |
+|---|---|---|
+| page | 1 | Page number |
+| limit | 10 | Results per page |
 
 **Response `200`:**
 ```json
@@ -217,9 +237,9 @@ Get paginated notes for the authenticated user.
 
 ---
 
-#### DELETE `/notes/:id` `[Protected]`
+#### DELETE `/note/:id` `[Protected]`
 
-Delete a note by ID. Only the note's owner can delete it.
+Delete a note by ID. Only the owner can delete their notes.
 
 **Response `200`:**
 ```json
@@ -228,24 +248,87 @@ Delete a note by ID. Only the note's owner can delete it.
 }
 ```
 
+---
+
+### Upload — `/api/upload`
+
+#### POST `/upload` `[Protected]`
+
+Upload a PDF file. The server extracts its text content and stores it in the database.
+
+**Content-Type:** `multipart/form-data`
+
+**Form Field:** `file` — the PDF file to upload
+
+**Response `200`:**
+```json
+{
+  "success": true,
+  "filename": "document.pdf",
+  "path": "uploads/1234567890-document.pdf",
+  "mimetype": "application/pdf",
+  "size": 102400
+}
+```
+
+The extracted text from the PDF is saved to the `Document` model and linked to the authenticated user.
+
+---
+
+## Error Responses
+
+Validation errors (Zod):
+```json
+{
+  "success": false,
+  "errors": [
+    { "field": "email", "message": "Invalid email address" }
+  ]
+}
+```
+
+General errors:
+```json
+{
+  "success": false,
+  "message": "Error description"
+}
+```
+
+---
+
 ## Data Models
 
 ### User
 
-| Field     | Type   | Required | Notes        |
-|-----------|--------|----------|--------------|
-| name      | String | Yes      |              |
-| email     | String | Yes      | Unique       |
-| password  | String | Yes      | Hashed       |
-| createdAt | Date   | —        | Auto         |
-| updatedAt | Date   | —        | Auto         |
+| Field | Type | Notes |
+|---|---|---|
+| name | String | Required |
+| email | String | Required, unique |
+| password | String | Required, hashed with bcrypt |
+| createdAt | Date | Auto |
+| updatedAt | Date | Auto |
 
 ### Note
 
-| Field     | Type     | Required | Notes             |
-|-----------|----------|----------|-------------------|
-| title     | String   | Yes      |                   |
-| content   | String   | Yes      |                   |
-| owner     | ObjectId | Yes      | Ref: User         |
-| createdAt | Date     | —        | Auto              |
-| updatedAt | Date     | —        | Auto              |
+| Field | Type | Notes |
+|---|---|---|
+| title | String | Required |
+| content | String | Required |
+| owner | ObjectId | Ref: User |
+| createdAt | Date | Auto |
+| updatedAt | Date | Auto |
+
+### Document
+
+| Field | Type | Notes |
+|---|---|---|
+| filename | String | Stored filename (timestamped) |
+| originalName | String | Original uploaded filename |
+| mimetype | String | File MIME type |
+| size | Number | File size in bytes |
+| path | String | Path on disk |
+| extractedText | String | Text extracted from PDF |
+| owner | ObjectId | Ref: User |
+| createdAt | Date | Auto |
+| updatedAt | Date | Auto |
