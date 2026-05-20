@@ -15,7 +15,7 @@ export const uploadFile = async (req: Request, res: Response, next: NextFunction
         }
         const fileData = fs.readFileSync(file.path);
         const pdfData = await pdfParse(fileData);
-        await uploadDocument({
+        const doc = await uploadDocument({
             content: pdfData.text, filename: file.filename,
             originalName: file.originalname, mimetype: file.mimetype, size: file.size,
             path: file.path, userId
@@ -25,7 +25,8 @@ export const uploadFile = async (req: Request, res: Response, next: NextFunction
             success: true,
             path: file.path,
             mimetype: file.mimetype,
-            size: file.size
+            size: file.size,
+            documentId: doc._id
         });
     } catch (error) {
         next(error);
