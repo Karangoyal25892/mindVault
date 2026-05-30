@@ -1,9 +1,6 @@
-import crypto from 'crypto';
 import app from './app';
 import { env } from './config/env';
 import { connectDB } from './database/connectDB';
-
-(global as any).crypto = crypto;
 
 const PORT = env.port;
 

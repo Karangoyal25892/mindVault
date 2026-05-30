@@ -1,6 +1,6 @@
 # MindVault Backend
 
-A RESTful API backend for MindVault — a note-taking application. Built with TypeScript, Express, MongoDB, and JWT authentication.
+A RESTful API backend for MindVault — a document and note management application with AI-powered summarization. Built with TypeScript, Express, MongoDB, and JWT authentication.
 
 ## Tech Stack
 
@@ -11,35 +11,48 @@ A RESTful API backend for MindVault — a note-taking application. Built with Ty
 - **Validation:** Zod
 - **Security:** Helmet, bcryptjs, CORS
 - **Logging:** Morgan
+- **File Upload:** Multer
+- **PDF Parsing:** pdf-parse
+- **AI Summarization:** OpenAI API (gpt-4.1-mini)
 
 ## Project Structure
 
 ```
 src/
-├── app.ts                    # Express app setup (middleware, routes)
-├── server.ts                 # Server entry point
+├── app.ts                        # Express app setup (middleware, routes)
+├── server.ts                     # Server entry point
 ├── config/
-│   └── env.ts                # Environment variable config
+│   └── env.ts                    # Environment variable config
 ├── controllers/
-│   ├── auth.controller.ts    # Register, login, profile, refresh token
-│   └── note.controller.ts    # Create, get, delete notes
+│   ├── auth.controller.ts        # Register, login, profile, refresh token
+│   ├── note.controller.ts        # Create, get, delete notes
+│   ├── upload.controller.ts      # File upload + PDF text extraction
+│   └── document.controller.ts   # Document summarization via OpenAI
 ├── middleware/
-│   ├── auth.middleware.ts    # JWT verification
-│   ├── validate.middleware.ts# Zod request validation
-│   └── error.middleware.ts   # Global error handler
+│   ├── auth.middleware.ts        # JWT verification
+│   ├── validate.middleware.ts    # Zod request validation
+│   ├── upload.middleware.ts      # Multer file upload config
+│   └── error.middleware.ts       # Global error handler
 ├── models/
-│   ├── user.ts               # User schema
-│   └── note.ts               # Note schema
+│   ├── user.ts                   # User schema
+│   ├── note.ts                   # Note schema
+│   └── document.ts               # Document schema
 ├── routes/
-│   ├── auth.routes.ts        # /api/auth/*
-│   └── note.routes.ts        # /api/notes/*
+│   ├── auth.routes.ts            # /api/auth/*
+│   ├── note.routes.ts            # /api/note/*
+│   ├── upload.routes.ts          # /api/upload/*
+│   └── document.routes.ts        # /api/document/*
 ├── services/
-│   ├── auth.service.ts       # Register/login business logic
-│   └── note.service.ts       # Note CRUD business logic
+│   ├── auth.service.ts           # Register/login business logic
+│   ├── note.service.ts           # Note CRUD business logic
+│   ├── upload.service.ts         # Document storage logic
+│   ├── document.service.ts       # Document retrieval logic
+│   └── ai.service.ts             # OpenAI summarization
 ├── types/
-│   └── express.d.ts          # Express Request type augmentation
+│   ├── express.d.ts              # Express Request type augmentation
+│   └── auth.types.ts             # Auth-related types
 └── validators/
-    └── auth.validator.ts     # Zod schemas for auth endpoints
+    └── auth.validator.ts         # Zod schemas for auth endpoints
 ```
 
 ## Getting Started
@@ -48,21 +61,24 @@ src/
 
 - Node.js >= 18
 - MongoDB instance (local or Atlas)
+- OpenAI API key
 
 ### Installation
 
 ```bash
+cd backend
 npm install
 ```
 
 ### Environment Variables
 
-Create a `.env` file in the project root:
+Create a `.env` file in the `backend/` directory:
 
 ```env
 PORT=5000
 MONGO_URI=mongodb://localhost:27017/mindvault
 JWT_SECRET=your_secret_key
+OPENAI_API_KEY=your_openai_api_key
 ```
 
 ### Running the Server
@@ -80,9 +96,11 @@ npm start
 
 Base URL: `http://localhost:5000/api`
 
-### Authentication
-
 All protected routes require the `Authorization: Bearer <token>` header.
+
+---
+
+### Authentication `/api/auth`
 
 #### POST `/auth/register`
 
@@ -111,8 +129,6 @@ Register a new user.
 
 #### POST `/auth/login`
 
-Login and receive access + refresh tokens.
-
 **Request Body:**
 ```json
 {
@@ -136,8 +152,6 @@ Token expiry: access token `1h`, refresh token `7d`.
 
 #### GET `/auth/profile` `[Protected]`
 
-Returns a confirmation that the protected route was accessed.
-
 **Response `200`:**
 ```json
 {
@@ -148,8 +162,6 @@ Returns a confirmation that the protected route was accessed.
 ---
 
 #### GET `/auth/refresh-token`
-
-Get a new access token using a refresh token.
 
 **Request Body:**
 ```json
@@ -168,11 +180,9 @@ Get a new access token using a refresh token.
 
 ---
 
-### Notes
+### Notes `/api/note` `[Protected]`
 
-All note routes are protected and scoped to the authenticated user.
-
-#### POST `/notes` `[Protected]`
+#### POST `/note`
 
 Create a new note.
 
@@ -193,7 +203,7 @@ Create a new note.
 
 ---
 
-#### GET `/notes` `[Protected]`
+#### GET `/note`
 
 Get paginated notes for the authenticated user.
 
@@ -217,9 +227,9 @@ Get paginated notes for the authenticated user.
 
 ---
 
-#### DELETE `/notes/:id` `[Protected]`
+#### DELETE `/note/:id`
 
-Delete a note by ID. Only the note's owner can delete it.
+Delete a note by ID. Only the owner can delete.
 
 **Response `200`:**
 ```json
@@ -228,24 +238,78 @@ Delete a note by ID. Only the note's owner can delete it.
 }
 ```
 
+---
+
+### File Upload `/api/upload` `[Protected]`
+
+#### POST `/upload`
+
+Upload a PDF file. The server extracts the text content and stores it in the database.
+
+**Request:** `multipart/form-data` with a `file` field (PDF).
+
+**Response `200`:**
+```json
+{
+  "filename": "document.pdf",
+  "success": true,
+  "path": "uploads/...",
+  "mimetype": "application/pdf",
+  "size": 12345,
+  "documentId": "..."
+}
+```
+
+---
+
+### Documents `/api/document` `[Protected]`
+
+#### GET `/document/:id/summarize`
+
+Summarize a previously uploaded document using OpenAI.
+
+**Response `200`:**
+```json
+{
+  "documentId": "...",
+  "summary": "AI-generated summary of the document..."
+}
+```
+
+---
+
 ## Data Models
 
 ### User
 
-| Field     | Type   | Required | Notes        |
-|-----------|--------|----------|--------------|
-| name      | String | Yes      |              |
-| email     | String | Yes      | Unique       |
-| password  | String | Yes      | Hashed       |
-| createdAt | Date   | —        | Auto         |
-| updatedAt | Date   | —        | Auto         |
+| Field     | Type   | Required | Notes  |
+|-----------|--------|----------|--------|
+| name      | String | Yes      |        |
+| email     | String | Yes      | Unique |
+| password  | String | Yes      | Hashed |
+| createdAt | Date   | —        | Auto   |
+| updatedAt | Date   | —        | Auto   |
 
 ### Note
 
-| Field     | Type     | Required | Notes             |
-|-----------|----------|----------|-------------------|
-| title     | String   | Yes      |                   |
-| content   | String   | Yes      |                   |
-| owner     | ObjectId | Yes      | Ref: User         |
-| createdAt | Date     | —        | Auto              |
-| updatedAt | Date     | —        | Auto              |
+| Field     | Type     | Required | Notes     |
+|-----------|----------|----------|-----------|
+| title     | String   | Yes      |           |
+| content   | String   | Yes      |           |
+| owner     | ObjectId | Yes      | Ref: User |
+| createdAt | Date     | —        | Auto      |
+| updatedAt | Date     | —        | Auto      |
+
+### Document
+
+| Field         | Type     | Required | Notes     |
+|---------------|----------|----------|-----------|
+| filename      | String   | Yes      |           |
+| originalName  | String   | Yes      |           |
+| mimetype      | String   | Yes      |           |
+| size          | Number   | Yes      |           |
+| path          | String   | Yes      |           |
+| extractedText | String   | Yes      | PDF text  |
+| owner         | ObjectId | Yes      | Ref: User |
+| createdAt     | Date     | —        | Auto      |
+| updatedAt     | Date     | —        | Auto      |
