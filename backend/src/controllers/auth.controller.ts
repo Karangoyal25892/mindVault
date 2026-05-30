@@ -27,7 +27,7 @@ export const login = async (req: Request, response: Response, next: NextFunction
     try {
         const { email, password } = req.body;
         const user = await loginUser(email, password);
-        const JWT_Token = jwt.sign({ userId: user._id.toString(), }, env.jwtSecret, { expiresIn: '1hour' });
+        const JWT_Token = jwt.sign({ userId: user._id.toString(), }, env.jwtSecret, { expiresIn: '1h' });
         const refreshTokens = jwt.sign({ userId: user._id.toString(), }, env.jwtSecret, { expiresIn: '7d' });
         response.status(200).json({
             message: 'User logged in successfully',

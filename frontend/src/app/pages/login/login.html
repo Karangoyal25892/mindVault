@@ -1,5 +1,19 @@
 <p>login works!</p>
-<div >
+
+<h2>Login</h2>
+
+<input #email placeholder="Email" value="test@example.com">
+<br><br>
+<input #password type="password" placeholder="Password" value="password123">
+<br><br>
+<button (click)="login(email.value, password.value)">
+    Login
+</button>
+
+
+
+
+<div>
     <h1>Signals Demo</h1>
     <h2>{{time()}}</h2>
     <p>Count: {{ count() }}</p>

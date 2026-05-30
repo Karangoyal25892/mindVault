@@ -11,9 +11,4 @@ export class Document {
   getHealth() {
     return this.http.get<any>('http://localhost:5000/');
   }
-
-  register(name: string, email: string, password: string) {
-    console.log('Registering user:', name);
-    return this.http.post<any>('http://localhost:5000/api/auth/register', { name, email, password });
-  }
 }
