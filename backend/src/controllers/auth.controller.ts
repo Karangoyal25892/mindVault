@@ -28,11 +28,11 @@ export const login = async (req: Request, response: Response, next: NextFunction
         const { email, password } = req.body;
         const user = await loginUser(email, password);
         const JWT_Token = jwt.sign({ userId: user._id.toString(), }, env.jwtSecret, { expiresIn: '1h' });
-        const refreshTokens = jwt.sign({ userId: user._id.toString(), }, env.jwtSecret, { expiresIn: '7d' });
+        const refreshToken = jwt.sign({ userId: user._id.toString(), }, env.jwtSecret, { expiresIn: '7d' });
+        response.cookie('refreshToken', refreshToken, { httpOnly: true });
         response.status(200).json({
             message: 'User logged in successfully',
-            token: JWT_Token,
-            refreshToken: refreshTokens,
+            token: JWT_Token
         });
     } catch (error) {
         next(error);
@@ -53,7 +53,7 @@ export const getProfile = async (req: Request, res: Response, next: NextFunction
 
 export const getrefreshToken = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const { refreshToken } = req.body;
+        const refreshToken = req.cookies.refreshToken;
         const tokens = refreshToken ? jwt.verify(refreshToken, env.jwtSecret) : null;
         if (!tokens) {
             return res.status(401).json({ message: 'Invalid refresh token' });

@@ -9,5 +9,5 @@ const router = express.Router();
 router.post('/register', validate(registerSchema), register);
 router.post('/login', validate(loginSchema), login);
 router.get('/profile', authMiddleware, getProfile);
-router.get('/refresh-token', getrefreshToken);
+router.post('/refreshtoken', getrefreshToken);
 export default router;

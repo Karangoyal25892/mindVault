@@ -1,4 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
+import { NotesStore } from '../../store/notes.store';
+import { AuthStore } from '../../store/auth.store';
 
 @Component({
   selector: 'app-dashboard',
@@ -7,5 +9,16 @@ import { Component } from '@angular/core';
   styleUrl: './dashboard.scss',
 })
 export class Dashboard {
-  
+
+  noteStore = inject(NotesStore);
+  authStore = inject(AuthStore);
+
+  onSearch(event: Event) {
+    const term = (event.target as HTMLInputElement).value;
+    this.noteStore.search(term);
+  }
+
+  logout(){
+    this.authStore.logout();
+  }
 }

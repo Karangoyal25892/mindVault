@@ -4,7 +4,7 @@ import { inject, Injectable } from '@angular/core';
 @Injectable({
   providedIn: 'root',
 })
-export class Document {
+export class DocumentApiService {
 
   private http = inject(HttpClient);
 

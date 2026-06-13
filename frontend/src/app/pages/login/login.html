@@ -6,22 +6,16 @@
 <br><br>
 <input #password type="password" placeholder="Password" value="password123">
 <br><br>
-<button (click)="login(email.value, password.value)">
-    Login
-</button>
-
-
 
 
 <div>
-    <h1>Signals Demo</h1>
-    <h2>{{time()}}</h2>
-    <p>Count: {{ count() }}</p>
-    <p>Double: {{ doubleCount() }}</p>
-
+    <button (click)="login(email.value, password.value)"> Login </button>
+    <br><br>
     <button (click)="registerUser()">Register</button>
-    <button (click)="increment()">Increment</button>
-    <button (click)="reset()">Reset</button>
-    <p>Message: {{ message() }}</p>
-    <p>Backend Message: {{ backendMessage() }}</p>
+    <br><br>
 </div>
+
+
+@if(authStore.error()) {
+<p>{{ authStore.error() }}</p>
+}

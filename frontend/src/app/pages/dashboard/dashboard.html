@@ -1,1 +1,19 @@
+<button (click)="logout()">Logout</button>
 <p>dashboard works!</p>
+<input type="text" placeholder="Search notes..." (input)="onSearch($event)" />
+<p> Total Notes: {{noteStore.noteCount()}}</p>
+
+@if(noteStore.loading()) {
+<p> Loading</p>
+}
+
+@if(noteStore.error()) {
+<p>{{ noteStore.error() }}</p>
+}
+
+@for(note of noteStore.notes(); track note.id) {
+<div>
+    <h3>{{ note.title }}</h3>
+    <p>{{ note.content }}</p>
+</div>
+}
