@@ -10,16 +10,18 @@ A full-stack document and note management application with AI-powered summarizat
 - **Runtime:** Node.js + TypeScript
 - **Framework:** Express v5
 - **Database:** MongoDB (Mongoose)
-- **Auth:** JWT (access + refresh tokens)
+- **Auth:** JWT (access + refresh tokens via httpOnly cookie)
 - **Validation:** Zod
 - **Security:** Helmet, bcryptjs, CORS
 - **File Upload:** Multer
 - **PDF Parsing:** pdf-parse
 - **AI Summarization:** OpenAI API (gpt-4.1-mini)
+- **Logging:** Morgan
 
 ### Frontend
 - **Framework:** Angular 21
 - **Language:** TypeScript
+- **State Management:** Angular Signals + RxJS Subjects
 - **Styling:** SCSS
 - **HTTP:** Angular HttpClient
 - **Testing:** Vitest
@@ -35,6 +37,7 @@ mindvault/
 │       ├── app.ts
 │       ├── server.ts
 │       ├── config/env.ts
+│       ├── database/connectDB.ts
 │       ├── controllers/
 │       │   ├── auth.controller.ts
 │       │   ├── note.controller.ts
@@ -71,17 +74,26 @@ mindvault/
             ├── app.ts
             ├── app.routes.ts
             ├── app.config.ts
+            ├── api/
+            │   ├── auth.api.ts
+            │   ├── notes.api.ts
+            │   └── document.api.ts
             ├── guards/
             │   └── auth-guard.ts
             ├── interceptors/
             │   └── auth-interceptor.ts
+            ├── model/
+            │   ├── user.model.ts
+            │   └── note.model.ts
             ├── pages/
             │   ├── login/
             │   ├── register/
             │   └── dashboard/
-            └── services/
-                ├── auth.ts
-                └── document.ts
+            ├── services/
+            │   └── TokenService.ts
+            └── store/
+                ├── auth.store.ts
+                └── notes.store.ts
 ```
 
 ---
@@ -142,13 +154,34 @@ ng build
 
 ## Frontend Routes
 
-| Path         | Component | Auth Required | Description          |
-|--------------|-----------|---------------|----------------------|
-| `/`          | Login     | No            | Login page           |
-| `/register`  | Register  | No            | Registration page    |
-| `/dashboard` | Dashboard | Yes           | Main app view        |
+| Path         | Component | Auth Required | Description       |
+|--------------|-----------|---------------|-------------------|
+| `/`          | Login     | No            | Login page        |
+| `/register`  | Register  | No            | Registration page |
+| `/dashboard` | Dashboard | Yes           | Notes + search    |
 
-Protected routes are guarded by `auth-guard.ts`. The `auth-interceptor.ts` automatically attaches the JWT to outgoing requests.
+- **`auth-guard.ts`** — reads the `authenticated` signal from `AuthStore`; redirects to `/` if not logged in.
+- **`auth-interceptor.ts`** — attaches `Authorization: Bearer <token>` to every outgoing request via `TokenService`.
+
+---
+
+## State Management
+
+### AuthStore
+Signals: `authenticated` (bool), `role` (`USER` | `ADMIN`), `loading` (bool), `error` (string).
+
+| Method              | Description                                              |
+|---------------------|----------------------------------------------------------|
+| `login(email, pw)`  | Calls auth API, stores token, navigates to `/dashboard`  |
+| `register()`        | Calls register API                                       |
+| `logout()`          | Removes token, resets state, navigates to `/`            |
+
+### NotesStore
+Signals: `notes` (Note[]), `loading` (bool), `error` (string\|null). Computed: `noteCount`.
+
+| Method          | Description                                                   |
+|-----------------|---------------------------------------------------------------|
+| `search(term)`  | Debounced (300ms) search — calls notes API, updates `notes`   |
 
 ---
 
@@ -160,40 +193,52 @@ All protected routes require `Authorization: Bearer <token>`.
 
 ### Auth `/api/auth`
 
-| Method | Endpoint              | Auth | Description              |
-|--------|-----------------------|------|--------------------------|
-| POST   | `/auth/register`      | No   | Register a new user      |
-| POST   | `/auth/login`         | No   | Login, returns tokens    |
-| GET    | `/auth/profile`       | Yes  | Access protected profile |
-| GET    | `/auth/refresh-token` | No   | Refresh access token     |
+| Method | Endpoint             | Auth | Description              |
+|--------|----------------------|------|--------------------------|
+| POST   | `/auth/register`     | No   | Register a new user      |
+| POST   | `/auth/login`        | No   | Login, returns tokens    |
+| GET    | `/auth/profile`      | Yes  | Access protected profile |
+| POST   | `/auth/refreshtoken` | No   | Refresh access token     |
 
 #### POST `/auth/register`
 ```json
 { "name": "John Doe", "email": "john@example.com", "password": "secret123" }
 ```
-**Response `201`:** `{ "message": "User registered successfully", "user": { ... } }`
-
 Validation: name ≥ 2 chars, valid email, password ≥ 6 chars.
+
+**Response `201`:**
+```json
+{ "message": "User registered successfully", "user": { "id": "...", "name": "...", "email": "..." } }
+```
 
 #### POST `/auth/login`
 ```json
 { "email": "john@example.com", "password": "secret123" }
 ```
-**Response `200`:** `{ "token": "<access_token>", "refreshToken": "<refresh_token>" }`
+**Response `200`:** Returns access token (1h expiry) in body; sets refresh token (7d) in httpOnly cookie.
+```json
+{ "message": "User logged in successfully", "token": "<access_token>", "role": "USER" }
+```
 
-Token expiry: access `1h`, refresh `7d`.
+#### POST `/auth/refreshtoken`
+Reads the refresh token from the httpOnly cookie.
+
+**Response `200`:**
+```json
+{ "message": "Token refreshed successfully", "token": "<new_access_token>" }
+```
 
 ---
 
 ### Notes `/api/note` `[Protected]`
 
-| Method | Endpoint    | Description                  |
-|--------|-------------|------------------------------|
-| POST   | `/note`     | Create a note                |
-| GET    | `/note`     | List notes (paginated)       |
-| DELETE | `/note/:id` | Delete a note (owner only)   |
+| Method | Endpoint    | Description                |
+|--------|-------------|----------------------------|
+| POST   | `/note`     | Create a note              |
+| GET    | `/note`     | List notes (paginated)     |
+| DELETE | `/note/:id` | Delete a note (owner only) |
 
-**GET `/note`** query params: `page` (default: 1), `limit` (default: 10)
+**GET `/note`** query params: `page` (default: 1), `limit` (default: 10). Returns notes sorted by `createdAt` descending.
 
 ---
 
@@ -207,13 +252,7 @@ Request: `multipart/form-data`, field name `file`.
 
 **Response `200`:**
 ```json
-{
-  "filename": "document.pdf",
-  "success": true,
-  "documentId": "...",
-  "mimetype": "application/pdf",
-  "size": 12345
-}
+{ "filename": "doc.pdf", "success": true, "documentId": "...", "mimetype": "application/pdf", "size": 12345 }
 ```
 
 ---
@@ -222,7 +261,7 @@ Request: `multipart/form-data`, field name `file`.
 
 | Method | Endpoint                  | Description                     |
 |--------|---------------------------|---------------------------------|
-| GET    | `/document/:id/summarize` | Summarize a document via OpenAI |
+| POST   | `/document/:id/summarize` | Summarize a document via OpenAI |
 
 **Response `200`:**
 ```json
@@ -234,13 +273,15 @@ Request: `multipart/form-data`, field name `file`.
 ## Data Models
 
 ### User
-| Field     | Type   | Notes        |
-|-----------|--------|--------------|
-| name      | String | Required     |
-| email     | String | Required, unique |
-| password  | String | Hashed       |
-| createdAt | Date   | Auto         |
-| updatedAt | Date   | Auto         |
+| Field        | Type   | Notes                  |
+|--------------|--------|------------------------|
+| name         | String | Required               |
+| email        | String | Required, unique       |
+| password     | String | Hashed (bcrypt)        |
+| role         | String | `USER` \| `ADMIN`, default `USER` |
+| tokenVersion | Number | Default 0              |
+| createdAt    | Date   | Auto                   |
+| updatedAt    | Date   | Auto                   |
 
 ### Note
 | Field     | Type     | Notes     |
