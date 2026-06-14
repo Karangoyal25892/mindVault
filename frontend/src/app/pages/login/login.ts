@@ -19,11 +19,11 @@ export class Login {
     this.authStore.login(email, password);
   }
 
-  registerUser(){
+  registerUser() {
     this.authStore.register();
   }
 
-  logout(){
+  logout() {
     this.authStore.logout();
   }
 }

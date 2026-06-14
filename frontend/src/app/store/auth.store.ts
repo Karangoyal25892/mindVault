@@ -17,7 +17,7 @@ export class AuthStore {
 
     //signal variables
     authenticated = signal(!!this.tokenService.isAuthenticated());
-    role = signal<string>('user');
+    role = signal<'USER' | 'ADMIN'>('USER');
     error = signal<string>('');
     loading = signal(false);
 
@@ -40,6 +40,7 @@ export class AuthStore {
             })
         ).subscribe((response: any) => {
             this.authenticated.set(true);
+            this.role.set(response.role);
             this.tokenService.setToken(response.token);
             this.router.navigate(['/dashboard']);
         })

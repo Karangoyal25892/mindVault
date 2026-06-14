@@ -8,7 +8,7 @@ export const registerUser = async (name: string, email: string, password: string
             throw new Error('User already exists');
         }
         const hashedPassword = await bcrypt.hash(password, 10);
-        const user = await User.create({ name, email, password: hashedPassword});
+        const user = await User.create({ name, email, password: hashedPassword });
         return user;
     }
     catch (error) {
@@ -27,7 +27,6 @@ export const loginUser = async (email: string, password: string) => {
         if (!isPasswordValid) {
             throw new Error('Invalid email or password');
         }
-
         return user;
     } catch (error) {
         throw error;

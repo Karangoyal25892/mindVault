@@ -32,7 +32,8 @@ export const login = async (req: Request, response: Response, next: NextFunction
         response.cookie('refreshToken', refreshToken, { httpOnly: true });
         response.status(200).json({
             message: 'User logged in successfully',
-            token: JWT_Token
+            token: JWT_Token,
+            role: user.role,
         });
     } catch (error) {
         next(error);

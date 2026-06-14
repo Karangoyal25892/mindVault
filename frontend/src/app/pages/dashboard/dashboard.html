@@ -11,6 +11,10 @@
 <p>{{ noteStore.error() }}</p>
 }
 
+@if(isAdmin()) {
+<button> Admin Button</button>
+}
+
 @for(note of noteStore.notes(); track note.id) {
 <div>
     <h3>{{ note.title }}</h3>
