@@ -24,7 +24,6 @@ A full-stack document and note management application with AI-powered summarizat
 - **State Management:** Angular Signals + RxJS Subjects
 - **Styling:** SCSS
 - **HTTP:** Angular HttpClient
-- **Testing:** Vitest
 
 ---
 
@@ -36,8 +35,10 @@ mindvault/
 │   └── src/
 │       ├── app.ts
 │       ├── server.ts
-│       ├── config/env.ts
-│       ├── database/connectDB.ts
+│       ├── config/
+│       │   └── env.ts
+│       ├── database/
+│       │   └── connectDB.ts
 │       ├── controllers/
 │       │   ├── auth.controller.ts
 │       │   ├── note.controller.ts
@@ -52,6 +53,8 @@ mindvault/
 │       │   ├── user.ts
 │       │   ├── note.ts
 │       │   └── document.ts
+│       ├── queues/
+│       │   └── documentProcessing.queue.ts
 │       ├── routes/
 │       │   ├── auth.routes.ts
 │       │   ├── note.routes.ts
@@ -62,12 +65,15 @@ mindvault/
 │       │   ├── note.service.ts
 │       │   ├── upload.service.ts
 │       │   ├── document.service.ts
+│       │   ├── pdf.service.ts
 │       │   └── ai.service.ts
 │       ├── types/
 │       │   ├── express.d.ts
 │       │   └── auth.types.ts
-│       └── validators/
-│           └── auth.validator.ts
+│       ├── validators/
+│       │   └── auth.validator.ts
+│       └── workers/
+│           └── document.processor.ts
 └── frontend/
     └── src/
         └── app/
@@ -89,7 +95,7 @@ mindvault/
             │   ├── login/
             │   ├── register/
             │   └── dashboard/
-            ├── services/
+            ├── service/
             │   └── TokenService.ts
             └── store/
                 ├── auth.store.ts
@@ -160,8 +166,8 @@ ng build
 | `/register`  | Register  | No            | Registration page |
 | `/dashboard` | Dashboard | Yes           | Notes + search    |
 
-- **`auth-guard.ts`** — reads the `authenticated` signal from `AuthStore`; redirects to `/` if not logged in.
-- **`auth-interceptor.ts`** — attaches `Authorization: Bearer <token>` to every outgoing request via `TokenService`.
+- **`auth-guard`** — reads the `authenticated` signal from `AuthStore`; redirects to `/` if not logged in.
+- **`auth-interceptor`** — attaches `Authorization: Bearer <token>` to every outgoing HTTP request via `TokenService`.
 
 ---
 
@@ -170,18 +176,33 @@ ng build
 ### AuthStore
 Signals: `authenticated` (bool), `role` (`USER` | `ADMIN`), `loading` (bool), `error` (string).
 
-| Method              | Description                                              |
-|---------------------|----------------------------------------------------------|
-| `login(email, pw)`  | Calls auth API, stores token, navigates to `/dashboard`  |
-| `register()`        | Calls register API                                       |
-| `logout()`          | Removes token, resets state, navigates to `/`            |
+| Method             | Description                                             |
+|--------------------|---------------------------------------------------------|
+| `login(email, pw)` | Calls auth API, stores token, navigates to `/dashboard` |
+| `register()`       | Calls register API                                      |
+| `logout()`         | Removes token, resets state, navigates to `/`           |
 
 ### NotesStore
 Signals: `notes` (Note[]), `loading` (bool), `error` (string\|null). Computed: `noteCount`.
 
-| Method          | Description                                                   |
-|-----------------|---------------------------------------------------------------|
-| `search(term)`  | Debounced (300ms) search — calls notes API, updates `notes`   |
+| Method         | Description                                                  |
+|----------------|--------------------------------------------------------------|
+| `search(term)` | Debounced (300ms) search — calls notes API, updates `notes`  |
+
+---
+
+## Document Processing Pipeline
+
+Uploads are processed asynchronously via an in-memory queue and worker:
+
+1. **Upload** — `POST /api/upload` accepts a PDF, stores file metadata in MongoDB with status `UPLOADED`, and adds the document ID to the queue.
+2. **Queue** — `documentProcessing.queue.ts` manages a FIFO queue of document IDs.
+3. **Worker** — `document.processor.ts` runs one document at a time:
+   - Sets status → `PROCESSING`
+   - Calls `pdf.service.ts` to extract text from the file
+   - Sets status → `PROCESSED`, stores `extractedText` and `processedAt`
+   - On failure: sets status → `FAILED`, stores `processingError`
+4. **Summarize** — `POST /api/document/:id/summarize` passes `extractedText` to OpenAI and returns the summary.
 
 ---
 
@@ -215,13 +236,13 @@ Validation: name ≥ 2 chars, valid email, password ≥ 6 chars.
 ```json
 { "email": "john@example.com", "password": "secret123" }
 ```
-**Response `200`:** Returns access token (1h expiry) in body; sets refresh token (7d) in httpOnly cookie.
+**Response `200`:** Access token (1h) in body; refresh token (7d) set in httpOnly cookie.
 ```json
 { "message": "User logged in successfully", "token": "<access_token>", "role": "USER" }
 ```
 
 #### POST `/auth/refreshtoken`
-Reads the refresh token from the httpOnly cookie.
+Reads refresh token from httpOnly cookie.
 
 **Response `200`:**
 ```json
@@ -244,9 +265,9 @@ Reads the refresh token from the httpOnly cookie.
 
 ### File Upload `/api/upload` `[Protected]`
 
-| Method | Endpoint  | Description                             |
-|--------|-----------|-----------------------------------------|
-| POST   | `/upload` | Upload a PDF — extracts and stores text |
+| Method | Endpoint  | Description                                   |
+|--------|-----------|-----------------------------------------------|
+| POST   | `/upload` | Upload a PDF — queues it for text extraction  |
 
 Request: `multipart/form-data`, field name `file`.
 
@@ -259,11 +280,18 @@ Request: `multipart/form-data`, field name `file`.
 
 ### Documents `/api/document` `[Protected]`
 
-| Method | Endpoint                  | Description                     |
-|--------|---------------------------|---------------------------------|
-| POST   | `/document/:id/summarize` | Summarize a document via OpenAI |
+| Method | Endpoint                  | Description                          |
+|--------|---------------------------|--------------------------------------|
+| POST   | `/document/:id/summarize` | Summarize a processed document via AI |
+| GET    | `/document/:id/status`    | Get document processing status        |
 
-**Response `200`:**
+**GET `/document/:id/status` Response `200`:**
+```json
+{ "status": "PROCESSED" }
+```
+Possible statuses: `UPLOADED` → `PROCESSING` → `PROCESSED` | `FAILED`
+
+**POST `/document/:id/summarize` Response `200`:**
 ```json
 { "documentId": "...", "summary": "AI-generated summary..." }
 ```
@@ -273,15 +301,15 @@ Request: `multipart/form-data`, field name `file`.
 ## Data Models
 
 ### User
-| Field        | Type   | Notes                  |
-|--------------|--------|------------------------|
-| name         | String | Required               |
-| email        | String | Required, unique       |
-| password     | String | Hashed (bcrypt)        |
+| Field        | Type   | Notes                         |
+|--------------|--------|-------------------------------|
+| name         | String | Required                      |
+| email        | String | Required, unique              |
+| password     | String | Hashed (bcrypt)               |
 | role         | String | `USER` \| `ADMIN`, default `USER` |
-| tokenVersion | Number | Default 0              |
-| createdAt    | Date   | Auto                   |
-| updatedAt    | Date   | Auto                   |
+| tokenVersion | Number | Default 0                     |
+| createdAt    | Date   | Auto                          |
+| updatedAt    | Date   | Auto                          |
 
 ### Note
 | Field     | Type     | Notes     |
@@ -293,14 +321,17 @@ Request: `multipart/form-data`, field name `file`.
 | updatedAt | Date     | Auto      |
 
 ### Document
-| Field         | Type     | Notes     |
-|---------------|----------|-----------|
-| filename      | String   | Required  |
-| originalName  | String   | Required  |
-| mimetype      | String   | Required  |
-| size          | Number   | Required  |
-| path          | String   | Required  |
-| extractedText | String   | PDF text  |
-| owner         | ObjectId | Ref: User |
-| createdAt     | Date     | Auto      |
-| updatedAt     | Date     | Auto      |
+| Field          | Type     | Notes                                              |
+|----------------|----------|----------------------------------------------------|
+| filename       | String   | Required                                           |
+| originalName   | String   | Required                                           |
+| mimetype       | String   | Required                                           |
+| size           | Number   | Required                                           |
+| path           | String   | Required                                           |
+| extractedText  | String   | Populated after processing                         |
+| status         | String   | `UPLOADED` \| `PROCESSING` \| `PROCESSED` \| `FAILED` |
+| processingError| String   | Populated on failure                               |
+| processedAt    | Date     | Populated on success                               |
+| owner          | ObjectId | Ref: User                                          |
+| createdAt      | Date     | Auto                                               |
+| updatedAt      | Date     | Auto                                               |
