@@ -1,5 +1,11 @@
 import mongoose from "mongoose";
 
+export type Status =
+    | "UPLOADED"
+    | "PROCESSING"
+    | "PROCESSED"
+    | "FAILED";
+
 const documentSchema = new mongoose.Schema({
     filename: {
         type: String,
@@ -23,7 +29,17 @@ const documentSchema = new mongoose.Schema({
     },
     extractedText: {
         type: String,
-        required: true
+    },
+    status: {
+        type: String,
+        enum :["UPLOADED", "PROCESSING", "PROCESSED", "FAILED"],
+        default: "UPLOADED"
+    },
+    processingError: {
+        type: String,
+    },
+    processedAt: {
+        type: Date
     },
     owner: {
         type: mongoose.Schema.Types.ObjectId,

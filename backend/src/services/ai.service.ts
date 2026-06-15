@@ -7,7 +7,7 @@ const OpenAi = new OpenAI({
 });
 
 
-export const summarizeDocument = async (text: string) => {
+export const summarizeDocument = async (text: string | undefined | null) => {
     const response = await OpenAi.chat.completions.create({
         model: "gpt-4.1-mini",
         temperature: 0.3,
