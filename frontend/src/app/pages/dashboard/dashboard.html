@@ -1,23 +1,12 @@
-<button (click)="logout()">Logout</button>
-<p>dashboard works!</p>
-<input type="text" placeholder="Search notes..." (input)="onSearch($event)" />
-<p> Total Notes: {{noteStore.noteCount()}}</p>
+<div class="dashboard-shell">
+  <header class="dashboard-header">
+    <nav class="dashboard-nav">
+      <a routerLink="/dashboard">Notes</a>
+      <a routerLink="/dashboard/knowledge">Knowledge Assistant</a>
+    </nav>
 
-@if(noteStore.loading()) {
-<p> Loading</p>
-}
+    <button class="logout-btn" (click)="logout()">Logout</button>
+  </header>
 
-@if(noteStore.error()) {
-<p>{{ noteStore.error() }}</p>
-}
-
-@if(isAdmin()) {
-<button> Admin Button</button>
-}
-
-@for(note of noteStore.notes(); track note.id) {
-<div>
-    <h3>{{ note.title }}</h3>
-    <p>{{ note.content }}</p>
+  <router-outlet />
 </div>
-}

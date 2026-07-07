@@ -1,0 +1,63 @@
+.knowledge-page {
+  max-width: 900px;
+  margin: 32px auto;
+  padding: 24px;
+}
+
+input,
+textarea {
+  width: 100%;
+  margin-top: 12px;
+  padding: 12px;
+  font-size: 14px;
+}
+
+button {
+  margin-top: 12px;
+  padding: 10px 18px;
+  cursor: pointer;
+}
+
+.answer,
+.code-section {
+  margin-top: 24px;
+}
+
+pre {
+  background: #f5f5f5;
+  padding: 16px;
+  overflow: auto;
+  border-radius: 8px;
+}
+
+.code-card {
+  margin-top: 16px;
+}
+
+.code-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.error {
+  margin-top: 16px;
+  color: red;
+}
+
+.interaction-card {
+  margin-top: 24px;
+  padding: 20px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background: #fafafa;
+}
+
+.detail-row {
+  margin-bottom: 16px;
+}
+
+.detail-row strong {
+  display: block;
+  margin-bottom: 6px;
+}

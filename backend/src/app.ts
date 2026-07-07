@@ -5,6 +5,7 @@ import express from 'express';
 import errorMiddleware from './middleware/error.middleware';
 import authRoutes from './routes/auth.routes';
 import documentRoutes from './routes/document.routes';
+import knowledgeRoutes from './routes/knowledge.routes';
 import noteRoutes from './routes/note.routes';
 import uploadRoutes from './routes/upload.routes';
 
@@ -21,6 +22,7 @@ app.use('/api/note', noteRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/document', documentRoutes);
+app.use('/api/knowledge', knowledgeRoutes);
 app.get('/', (req, res) => {
     res.json({ message: 'MindVault Started!' });
 });

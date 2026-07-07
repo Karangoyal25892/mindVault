@@ -1,0 +1,47 @@
+:host {
+  display: block;
+  min-height: 100vh;
+  background: #f7f8fb;
+}
+
+.dashboard-shell {
+  padding: 24px;
+}
+
+.dashboard-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  margin-bottom: 24px;
+}
+
+.dashboard-nav {
+  display: flex;
+  gap: 12px;
+}
+
+.dashboard-nav a {
+  text-decoration: none;
+  color: #374151;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-weight: 500;
+}
+
+.dashboard-nav a:hover {
+  background: #eef2ff;
+  color: #4338ca;
+}
+
+.logout-btn {
+  margin-left: auto;
+  padding: 8px 14px;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  border-radius: 8px;
+  cursor: pointer;
+}

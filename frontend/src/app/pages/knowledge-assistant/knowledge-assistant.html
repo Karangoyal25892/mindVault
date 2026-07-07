@@ -1,0 +1,80 @@
+<div class="knowledge-page">
+    <h1>Knowledge Assistant</h1>
+    <p>Ask questions about components and interactions.</p>
+
+    <input type="text" placeholder="Optional component name, e.g. Lightning Lookup" [ngModel]="componentName()"
+        (ngModelChange)="componentName.set($event)" />
+
+    <textarea rows="5" placeholder="Ask a question..." [ngModel]="question()"
+        (ngModelChange)="question.set($event)"></textarea>
+
+    <button (click)="ask()" [disabled]="loading()">
+        {{ loading() ? 'Thinking...' : 'Ask' }}
+    </button>
+
+    @if (error()) {
+    <div class="error">{{ error() }}</div>
+    }
+
+    @if (interaction()) {
+    <section class="interaction-card">
+        <h2>Interaction Details</h2>
+
+        <div class="detail-row">
+            <strong>Component:</strong>
+            <span>{{ interaction()?.component }}</span>
+        </div>
+
+        <div class="detail-row">
+            <strong>Interaction:</strong>
+            <span>{{ interaction()?.name }}</span>
+        </div>
+
+        <div class="detail-row">
+            <strong>Title:</strong>
+            <span>{{ interaction()?.title }}</span>
+        </div>
+
+        <div class="detail-row">
+            <strong>Type:</strong>
+            <span>{{ interaction()?.type }}</span>
+        </div>
+
+        <div class="detail-row">
+            <strong>Summary:</strong>
+            <span>{{ interaction()?.summary }}</span>
+        </div>
+
+        <div class="detail-row">
+            <strong>Implementation:</strong>
+            <pre>
+                <code>{{ interaction()?.implementation }}</code>
+            </pre>
+        </div>
+    </section>
+    }
+
+    @if (answer()) {
+    <section class="answer">
+        <h2>AI Explanation</h2>
+
+        <pre>{{ answer() }}</pre>
+    </section>
+    }
+    @if (codeSnippets().length) {
+    <section class="code-section">
+        <h2>Code Snippets</h2>
+
+        @for (snippet of codeSnippets(); track snippet.title) {
+        <div class="code-card">
+            <div class="code-header">
+                <strong>{{ snippet.title }}</strong>
+                <button (click)="copyCode(snippet.code)">Copy</button>
+            </div>
+
+            <pre><code>{{ snippet.code }}</code></pre>
+        </div>
+        }
+    </section>
+    }
+</div>
