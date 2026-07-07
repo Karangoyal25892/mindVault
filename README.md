@@ -1,6 +1,6 @@
 # MindVault
 
-A full-stack document and note management application with AI-powered summarization. Upload PDFs, take notes, and get instant AI summaries.
+A full-stack document, note management, and AI knowledge assistant application. Upload PDFs, take notes, get AI summaries, and query an indexed knowledge base using semantic search and RAG.
 
 ---
 
@@ -15,7 +15,8 @@ A full-stack document and note management application with AI-powered summarizat
 - **Security:** Helmet, bcryptjs, CORS
 - **File Upload:** Multer
 - **PDF Parsing:** pdf-parse
-- **AI Summarization:** OpenAI API (gpt-4.1-mini)
+- **AI Summarization / LLM:** OpenAI API (gpt-4.1-mini) or Ollama (llama3.2:3b)
+- **Embeddings:** OpenAI (`text-embedding-3-small`) or local (`Xenova/all-MiniLM-L6-v2`)
 - **Logging:** Morgan
 
 ### Frontend
@@ -43,7 +44,8 @@ mindvault/
 │       │   ├── auth.controller.ts
 │       │   ├── note.controller.ts
 │       │   ├── upload.controller.ts
-│       │   └── document.controller.ts
+│       │   ├── document.controller.ts
+│       │   └── knowledge.controller.ts
 │       ├── middleware/
 │       │   ├── auth.middleware.ts
 │       │   ├── validate.middleware.ts
@@ -52,21 +54,27 @@ mindvault/
 │       ├── models/
 │       │   ├── user.ts
 │       │   ├── note.ts
-│       │   └── document.ts
+│       │   ├── document.ts
+│       │   └── knowledgeChunk.ts
 │       ├── queues/
 │       │   └── documentProcessing.queue.ts
 │       ├── routes/
 │       │   ├── auth.routes.ts
 │       │   ├── note.routes.ts
 │       │   ├── upload.routes.ts
-│       │   └── document.routes.ts
+│       │   ├── document.routes.ts
+│       │   └── knowledge.routes.ts
 │       ├── services/
 │       │   ├── auth.service.ts
 │       │   ├── note.service.ts
 │       │   ├── upload.service.ts
 │       │   ├── document.service.ts
 │       │   ├── pdf.service.ts
-│       │   └── ai.service.ts
+│       │   ├── ai.service.ts
+│       │   ├── embedding.service.ts
+│       │   ├── knowledge.service.ts
+│       │   ├── knowledgeIndexer.service.ts
+│       │   └── llm.service.ts
 │       ├── types/
 │       │   ├── express.d.ts
 │       │   └── auth.types.ts
@@ -94,9 +102,13 @@ mindvault/
             ├── pages/
             │   ├── login/
             │   ├── register/
-            │   └── dashboard/
+            │   ├── dashboard/
+            │   │   └── dashboard.routes.ts
+            │   ├── notes/
+            │   └── knowledge-assistant/
             ├── service/
-            │   └── TokenService.ts
+            │   ├── TokenService.ts
+            │   └── knowledge.service.ts
             └── store/
                 ├── auth.store.ts
                 └── notes.store.ts
@@ -110,7 +122,7 @@ mindvault/
 
 - Node.js >= 18
 - MongoDB (local or Atlas)
-- OpenAI API key
+- OpenAI API key (or Ollama running locally for LLM + local embeddings)
 
 ---
 
@@ -128,6 +140,18 @@ PORT=5000
 MONGO_URI=mongodb://localhost:27017/mindvault
 JWT_SECRET=your_jwt_secret
 OPENAI_API_KEY=your_openai_api_key
+
+# Knowledge base indexing
+KNOWLEDGE_SOURCE_PATH=/path/to/knowledge/files
+
+# LLM provider: "openai" or leave unset for Ollama (llama3.2:3b on localhost:11434)
+LLM_PROVIDER=openai
+
+# Embedding provider: "openai" or leave unset for local (Xenova/all-MiniLM-L6-v2)
+EMBEDDING_PROVIDER=openai
+
+# OpenAI embedding model (used when EMBEDDING_PROVIDER=openai)
+OPENAI_EMBEDDING_MODEL=text-embedding-3-small
 ```
 
 ```bash
@@ -160,14 +184,16 @@ ng build
 
 ## Frontend Routes
 
-| Path         | Component | Auth Required | Description       |
-|--------------|-----------|---------------|-------------------|
-| `/`          | Login     | No            | Login page        |
-| `/register`  | Register  | No            | Registration page |
-| `/dashboard` | Dashboard | Yes           | Notes + search    |
+| Path                   | Component              | Auth | Description                        |
+|------------------------|------------------------|------|------------------------------------|
+| `/`                    | Login                  | No   | Login page                         |
+| `/register`            | Register               | No   | Registration page                  |
+| `/dashboard`           | Dashboard → Notes      | Yes  | Notes list with search (default)   |
+| `/dashboard/knowledge` | Dashboard → Knowledge  | Yes  | AI Knowledge Assistant             |
 
-- **`auth-guard`** — reads the `authenticated` signal from `AuthStore`; redirects to `/` if not logged in.
+- **`auth-guard`** — uses `canMatch`; reads `authenticated` signal from `AuthStore`. Redirects to `/` if not logged in.
 - **`auth-interceptor`** — attaches `Authorization: Bearer <token>` to every outgoing HTTP request via `TokenService`.
+- The dashboard uses lazy-loaded child routes defined in `dashboard.routes.ts`.
 
 ---
 
@@ -185,9 +211,9 @@ Signals: `authenticated` (bool), `role` (`USER` | `ADMIN`), `loading` (bool), `e
 ### NotesStore
 Signals: `notes` (Note[]), `loading` (bool), `error` (string\|null). Computed: `noteCount`.
 
-| Method         | Description                                                  |
-|----------------|--------------------------------------------------------------|
-| `search(term)` | Debounced (300ms) search — calls notes API, updates `notes`  |
+| Method         | Description                                                 |
+|----------------|-------------------------------------------------------------|
+| `search(term)` | Debounced (300ms) search — calls notes API, updates `notes` |
 
 ---
 
@@ -195,14 +221,46 @@ Signals: `notes` (Note[]), `loading` (bool), `error` (string\|null). Computed: `
 
 Uploads are processed asynchronously via an in-memory queue and worker:
 
-1. **Upload** — `POST /api/upload` accepts a PDF, stores file metadata in MongoDB with status `UPLOADED`, and adds the document ID to the queue.
+1. **Upload** — `POST /api/upload` stores file metadata with status `UPLOADED` and adds the document ID to the queue.
 2. **Queue** — `documentProcessing.queue.ts` manages a FIFO queue of document IDs.
-3. **Worker** — `document.processor.ts` runs one document at a time:
+3. **Worker** — `document.processor.ts` processes one document at a time:
    - Sets status → `PROCESSING`
-   - Calls `pdf.service.ts` to extract text from the file
+   - Calls `pdf.service.ts` to extract text
    - Sets status → `PROCESSED`, stores `extractedText` and `processedAt`
    - On failure: sets status → `FAILED`, stores `processingError`
 4. **Summarize** — `POST /api/document/:id/summarize` passes `extractedText` to OpenAI and returns the summary.
+
+---
+
+## Knowledge Base (RAG)
+
+The knowledge system indexes component definition files and their JavaScript implementations, then answers natural-language questions using semantic search + LLM generation.
+
+### Indexing
+`POST /api/knowledge/index` scans `KNOWLEDGE_SOURCE_PATH` for:
+- **`.cp.json` files** — component definitions (label, tagName, interactions, summaries)
+- **`interaction*.js` files** — raw JS implementations (parsed per function)
+
+Each piece of content is embedded and stored as a `KnowledgeChunk` in MongoDB.
+
+### Query Flow (`/api/knowledge/ask`)
+1. Embeds the user query
+2. Runs cosine similarity against all stored chunks to find the top interaction match
+3. Fetches the linked JS implementation chunk
+4. Sends query + context to the LLM (OpenAI or Ollama) using a QA-engineer-focused prompt
+5. Returns: AI explanation, matched interaction details, and relevant code snippets
+
+### Embedding Providers
+| Provider | Model | Set via |
+|----------|-------|---------|
+| Local (default) | `Xenova/all-MiniLM-L6-v2` | `EMBEDDING_PROVIDER` unset |
+| OpenAI | `text-embedding-3-small` (configurable) | `EMBEDDING_PROVIDER=openai` |
+
+### LLM Providers
+| Provider | Model | Set via |
+|----------|-------|---------|
+| Ollama (default) | `llama3.2:3b` at `localhost:11434` | `LLM_PROVIDER` unset |
+| OpenAI | `gpt-5.5` (configurable) | `LLM_PROVIDER=openai` |
 
 ---
 
@@ -221,33 +279,8 @@ All protected routes require `Authorization: Bearer <token>`.
 | GET    | `/auth/profile`      | Yes  | Access protected profile |
 | POST   | `/auth/refreshtoken` | No   | Refresh access token     |
 
-#### POST `/auth/register`
-```json
-{ "name": "John Doe", "email": "john@example.com", "password": "secret123" }
-```
-Validation: name ≥ 2 chars, valid email, password ≥ 6 chars.
-
-**Response `201`:**
-```json
-{ "message": "User registered successfully", "user": { "id": "...", "name": "...", "email": "..." } }
-```
-
-#### POST `/auth/login`
-```json
-{ "email": "john@example.com", "password": "secret123" }
-```
-**Response `200`:** Access token (1h) in body; refresh token (7d) set in httpOnly cookie.
-```json
-{ "message": "User logged in successfully", "token": "<access_token>", "role": "USER" }
-```
-
-#### POST `/auth/refreshtoken`
-Reads refresh token from httpOnly cookie.
-
-**Response `200`:**
-```json
-{ "message": "Token refreshed successfully", "token": "<new_access_token>" }
-```
+**POST `/auth/register`** — body: `{ name, email, password }` (name ≥ 2 chars, password ≥ 6 chars)
+**POST `/auth/login`** — returns access token (1h) in body and refresh token (7d) in httpOnly cookie.
 
 ---
 
@@ -259,41 +292,63 @@ Reads refresh token from httpOnly cookie.
 | GET    | `/note`     | List notes (paginated)     |
 | DELETE | `/note/:id` | Delete a note (owner only) |
 
-**GET `/note`** query params: `page` (default: 1), `limit` (default: 10). Returns notes sorted by `createdAt` descending.
+**GET `/note`** query params: `page` (default: 1), `limit` (default: 10). Sorted by `createdAt` descending.
 
 ---
 
 ### File Upload `/api/upload` `[Protected]`
 
-| Method | Endpoint  | Description                                   |
-|--------|-----------|-----------------------------------------------|
-| POST   | `/upload` | Upload a PDF — queues it for text extraction  |
+| Method | Endpoint  | Description                                  |
+|--------|-----------|----------------------------------------------|
+| POST   | `/upload` | Upload a PDF — queues it for text extraction |
 
 Request: `multipart/form-data`, field name `file`.
-
-**Response `200`:**
-```json
-{ "filename": "doc.pdf", "success": true, "documentId": "...", "mimetype": "application/pdf", "size": 12345 }
-```
 
 ---
 
 ### Documents `/api/document` `[Protected]`
 
-| Method | Endpoint                  | Description                          |
-|--------|---------------------------|--------------------------------------|
+| Method | Endpoint                  | Description                           |
+|--------|---------------------------|---------------------------------------|
 | POST   | `/document/:id/summarize` | Summarize a processed document via AI |
 | GET    | `/document/:id/status`    | Get document processing status        |
 
-**GET `/document/:id/status` Response `200`:**
-```json
-{ "status": "PROCESSED" }
-```
 Possible statuses: `UPLOADED` → `PROCESSING` → `PROCESSED` | `FAILED`
 
-**POST `/document/:id/summarize` Response `200`:**
+---
+
+### Knowledge `/api/knowledge`
+
+| Method | Endpoint                    | Auth | Description                                     |
+|--------|-----------------------------|------|-------------------------------------------------|
+| POST   | `/knowledge/index`          | No   | Index component + JS files from source path     |
+| POST   | `/knowledge/search`         | No   | Full-text search over knowledge chunks          |
+| POST   | `/knowledge/semantic-search`| No   | Vector similarity search over knowledge chunks  |
+| POST   | `/knowledge/ask`            | No   | RAG-style Q&A — semantic search + LLM answer   |
+
+**POST `/knowledge/search`** — body: `{ query: string }`
+
+**POST `/knowledge/semantic-search`** — body: `{ query: string, topK?: number, componentName?: string }`
+
+**POST `/knowledge/ask`** — body: `{ query: string, componentName?: string }`
+
+**Response `200`:**
 ```json
-{ "documentId": "...", "summary": "AI-generated summary..." }
+{
+  "success": true,
+  "answer": "SUMMARY:\n...\n\nFLOW:\n1. ...",
+  "interaction": {
+    "component": "Lightning Lookup",
+    "name": "selectItem",
+    "title": "Select an item",
+    "type": "click",
+    "summary": "...",
+    "implementation": "..."
+  },
+  "codeSnippets": [
+    { "title": "object.function", "code": "...", "linkedFrom": "..." }
+  ]
+}
 ```
 
 ---
@@ -301,15 +356,15 @@ Possible statuses: `UPLOADED` → `PROCESSING` → `PROCESSED` | `FAILED`
 ## Data Models
 
 ### User
-| Field        | Type   | Notes                         |
-|--------------|--------|-------------------------------|
-| name         | String | Required                      |
-| email        | String | Required, unique              |
-| password     | String | Hashed (bcrypt)               |
+| Field        | Type   | Notes                             |
+|--------------|--------|-----------------------------------|
+| name         | String | Required                          |
+| email        | String | Required, unique                  |
+| password     | String | Hashed (bcrypt)                   |
 | role         | String | `USER` \| `ADMIN`, default `USER` |
-| tokenVersion | Number | Default 0                     |
-| createdAt    | Date   | Auto                          |
-| updatedAt    | Date   | Auto                          |
+| tokenVersion | Number | Default 0                         |
+| createdAt    | Date   | Auto                              |
+| updatedAt    | Date   | Auto                              |
 
 ### Note
 | Field     | Type     | Notes     |
@@ -321,17 +376,31 @@ Possible statuses: `UPLOADED` → `PROCESSING` → `PROCESSED` | `FAILED`
 | updatedAt | Date     | Auto      |
 
 ### Document
-| Field          | Type     | Notes                                              |
-|----------------|----------|----------------------------------------------------|
-| filename       | String   | Required                                           |
-| originalName   | String   | Required                                           |
-| mimetype       | String   | Required                                           |
-| size           | Number   | Required                                           |
-| path           | String   | Required                                           |
-| extractedText  | String   | Populated after processing                         |
+| Field          | Type     | Notes                                                  |
+|----------------|----------|--------------------------------------------------------|
+| filename       | String   | Required                                               |
+| originalName   | String   | Required                                               |
+| mimetype       | String   | Required                                               |
+| size           | Number   | Required                                               |
+| path           | String   | Required                                               |
+| extractedText  | String   | Populated after processing                             |
 | status         | String   | `UPLOADED` \| `PROCESSING` \| `PROCESSED` \| `FAILED` |
-| processingError| String   | Populated on failure                               |
-| processedAt    | Date     | Populated on success                               |
-| owner          | ObjectId | Ref: User                                          |
-| createdAt      | Date     | Auto                                               |
-| updatedAt      | Date     | Auto                                               |
+| processingError| String   | Populated on failure                                   |
+| processedAt    | Date     | Populated on success                                   |
+| owner          | ObjectId | Ref: User                                              |
+| createdAt      | Date     | Auto                                                   |
+| updatedAt      | Date     | Auto                                                   |
+
+### KnowledgeChunk
+| Field         | Type     | Notes                                                        |
+|---------------|----------|--------------------------------------------------------------|
+| sourceType    | String   | `component` \| `interaction-js`                             |
+| componentName | String   | Optional                                                     |
+| tagName       | String   | Optional                                                     |
+| chunkType     | String   | `overview` \| `attribute` \| `interaction` \| `js-function` |
+| title         | String   | Required                                                     |
+| content       | String   | Required — raw text used for search and embedding            |
+| embedding     | Number[] | Vector embedding of content                                  |
+| metadata      | Object   | Flexible — stores interaction name, JS snippet, file path, etc. |
+| createdAt     | Date     | Auto                                                         |
+| updatedAt     | Date     | Auto                                                         |
