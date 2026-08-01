@@ -32,7 +32,7 @@ export class KnowledgeService {
 
     askKnowledge(query: string, componentName?: string): Observable<AskKnowledgeResponse> {
         return this.http.post<AskKnowledgeResponse>(
-            '/api/api/knowledge/ask',
+            '/api/knowledge/ask',
             {
                 query,
                 componentName,

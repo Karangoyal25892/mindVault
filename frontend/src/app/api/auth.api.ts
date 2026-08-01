@@ -10,14 +10,14 @@ export class AuthApiService {
   constructor() { }
 
   register(name: string, email: string, password: string) {
-    return this.http.post<any>('/api/api/auth/register', { name, email, password });
+    return this.http.post<any>('/api/auth/register', { name, email, password });
   }
 
   login(email: string, password: string) {
-    return this.http.post<any>('/api/api/auth/login', { email, password });
+    return this.http.post<any>('/api/auth/login', { email, password });
   }
 
   refreshToken() {
-    return this.http.post<any>('/api/api/auth/refreshtoken', {}, { withCredentials: true })
+    return this.http.post<any>('/api/auth/refreshtoken', {}, { withCredentials: true })
   }
 }
