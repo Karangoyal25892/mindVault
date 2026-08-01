@@ -1,80 +1,131 @@
 <div class="knowledge-page">
-    <h1>Knowledge Assistant</h1>
-    <p>Ask questions about components and interactions.</p>
+  <section class="assistant-card">
+    <div class="assistant-header">
+      <h2>Knowledge Assistant</h2>
+      <p>Ask questions about indexed components, interactions, and JS implementations.</p>
+    </div>
 
-    <input type="text" placeholder="Optional component name, e.g. Lightning Lookup" [ngModel]="componentName()"
-        (ngModelChange)="componentName.set($event)" />
+    <div class="question-box">
+      <label>Question</label>
+      <textarea rows="4" placeholder="Example: What is the set interaction for lightning lookup?" [value]="question()"
+        (input)="question.set($any($event.target).value)"></textarea>
+    </div>
 
-    <textarea rows="5" placeholder="Ask a question..." [ngModel]="question()"
-        (ngModelChange)="question.set($event)"></textarea>
+    <div class="component-box">
+      <label>Component Name <span>Optional</span></label>
+      <input type="text" placeholder="Example: lightning-lookup" [value]="componentName()"
+        (input)="componentName.set($any($event.target).value)" />
+    </div>
 
-    <button (click)="ask()" [disabled]="loading()">
-        {{ loading() ? 'Thinking...' : 'Ask' }}
+    <button class="ask-btn" type="button" (click)="ask()" [disabled]="loading()">
+      @if (loading()) {
+      Asking...
+      } @else {
+      Ask Knowledge Assistant
+      }
     </button>
 
     @if (error()) {
-    <div class="error">{{ error() }}</div>
+    <div class="error-box">
+      {{ error() }}
+    </div>
     }
+  </section>
+  @if (!loading() && !answer() && !interaction() && codeSnippets().length === 0 && !error()) {
+  <section class="empty-state">
+    <h3>Ask your first question</h3>
+    <p>
+      You can ask about indexed components, supported interactions, or the JavaScript implementation behind an
+      interaction.
+    </p>
 
-    @if (interaction()) {
-    <section class="interaction-card">
-        <h2>Interaction Details</h2>
+    <div class="example-questions">
+      <span>Try:</span>
 
-        <div class="detail-row">
-            <strong>Component:</strong>
-            <span>{{ interaction()?.component }}</span>
-        </div>
+      <button type="button" (click)="question.set('what is the set interaction for the lookup')">
+        What is the set interaction for the lookup?
+      </button>
 
-        <div class="detail-row">
-            <strong>Interaction:</strong>
-            <span>{{ interaction()?.name }}</span>
-        </div>
+      <button type="button" (click)="question.set('how does the check interaction work for checkbox')">
+        How does checkbox check interaction work?
+      </button>
 
-        <div class="detail-row">
-            <strong>Title:</strong>
-            <span>{{ interaction()?.title }}</span>
-        </div>
+      <button type="button" (click)="question.set('show me the javascript implementation for set interaction')">
+        Show JavaScript implementation for set interaction
+      </button>
+    </div>
+  </section>
+  }
 
-        <div class="detail-row">
-            <strong>Type:</strong>
-            <span>{{ interaction()?.type }}</span>
-        </div>
+  @if (answer()) {
+  <section class="result-card">
+    <h3>AI Explanation</h3>
+    <p class="answer-text">{{ answer() }}</p>
+  </section>
+  }
 
-        <div class="detail-row">
-            <strong>Summary:</strong>
-            <span>{{ interaction()?.summary }}</span>
-        </div>
+  @if (interaction()) {
+  <section class="result-card">
+    <h3>Interaction Details</h3>
 
-        <div class="detail-row">
-            <strong>Implementation:</strong>
-            <pre>
-                <code>{{ interaction()?.implementation }}</code>
-            </pre>
-        </div>
-    </section>
+    <div class="details-grid">
+      <div>
+        <span>Component</span>
+        <strong>{{ interaction()?.component }}</strong>
+      </div>
+
+      <div>
+        <span>Name</span>
+        <strong>{{ interaction()?.name }}</strong>
+      </div>
+
+      <div>
+        <span>Title</span>
+        <strong>{{ interaction()?.title }}</strong>
+      </div>
+
+      <div>
+        <span>Type</span>
+        <strong>{{ interaction()?.type }}</strong>
+      </div>
+    </div>
+    @if (interaction()?.implementation) {
+    <div class="summary-box">
+      <span>Implementation</span>
+      <p>{{ interaction()?.implementation }}</p>
+    </div>
     }
-
-    @if (answer()) {
-    <section class="answer">
-        <h2>AI Explanation</h2>
-
-        <pre>{{ answer() }}</pre>
-    </section>
+    @if (interaction()?.summary) {
+    <div class="summary-box">
+      <span>Summary</span>
+      <p>{{ interaction()?.summary }}</p>
+    </div>
     }
-    @if (codeSnippets().length) {
-    <section class="code-section">
-        <h2>Code Snippets</h2>
+  </section>
+  }
 
-        @for (snippet of codeSnippets(); track snippet.title) {
-        <div class="code-card">
-            <div class="code-header">
-                <strong>{{ snippet.title }}</strong>
-                <button (click)="copyCode(snippet.code)">Copy</button>
-            </div>
+  @if (codeSnippets().length > 0) {
+  <section class="result-card">
+    <h3>Code Snippets</h3>
 
-            <pre><code>{{ snippet.code }}</code></pre>
+    <div class="snippet-list">
+      @for (snippet of codeSnippets(); track snippet.title) {
+      <div class="code-card">
+        <div class="code-header">
+          <div>
+            <h4>{{ snippet.title }}</h4>
+            <span>Linked from: {{ snippet.linkedFrom }}</span>
+          </div>
+
+          <button type="button" (click)="copyCode(snippet.code)">
+            Copy
+          </button>
         </div>
-        }
-    </section>
-    }
+
+        <pre><code>{{ snippet.code }}</code></pre>
+      </div>
+      }
+    </div>
+  </section>
+  }
 </div>

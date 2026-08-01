@@ -9,6 +9,6 @@ export class DocumentApiService {
   private http = inject(HttpClient);
 
   getHealth() {
-    return this.http.get<any>('http://localhost:5000/');
+    return this.http.get<any>('/api/');
   }
 }

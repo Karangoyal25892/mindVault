@@ -1,0 +1,742 @@
+{
+  "componentId": "8b7f0d47-4988-44c2-beab-438d9052bc7c",
+  "tagName": "lightning-input-address",
+  "qualifier": null,
+  "label": "Lightning Address Input",
+  "name": "json::/com/provar/salesforce/lwc/LightningAddressInput",
+  "type": "container",
+  "instanceLabelExpressions": [
+    "{addressLabel} address"
+  ],
+  "pageStructureElement": false,
+  "fieldDetailsElement": true,
+  "attributes": [
+    {
+      "name": "addressLabel",
+      "attributeName": "addressLabel",
+      "title": "Address label",
+      "summary": "The label for the address compound field.",
+      "valueType": {
+        "id": "text"
+      },
+      "locatable": true,
+      "locatorPriority": null,
+      "locatorParameter": false,
+      "readAssertable": true,
+      "valueAttribute": false,
+      "messageAttribute": false
+    },
+    {
+      "name": "addressLookupPlaceholder",
+      "attributeName": "addressLookupPlaceholder",
+      "title": "Address lookup placeholder",
+      "summary": "The placeholder for the address lookup field option. Visible only when using show-address-lookup.",
+      "valueType": {
+        "id": "text"
+      },
+      "locatable": false,
+      "locatorPriority": null,
+      "locatorParameter": false,
+      "readAssertable": true,
+      "valueAttribute": false,
+      "messageAttribute": false
+    },
+    {
+      "name": "city",
+      "attributeName": "city",
+      "title": "City",
+      "summary": "The value for the city field. Maximum length is 40 characters.",
+      "valueType": {
+        "id": "text"
+      },
+      "locatable": false,
+      "locatorPriority": null,
+      "locatorParameter": true,
+      "readAssertable": true,
+      "valueAttribute": false,
+      "messageAttribute": false
+    },
+    {
+      "name": "cityLabel",
+      "attributeName": "cityLabel",
+      "title": "City label",
+      "summary": "The label for the city field.",
+      "valueType": {
+        "id": "text"
+      },
+      "locatable": false,
+      "locatorPriority": null,
+      "locatorParameter": false,
+      "readAssertable": true,
+      "valueAttribute": false,
+      "messageAttribute": false
+    },
+    {
+      "name": "cityPlaceholder",
+      "attributeName": "cityPlaceholder",
+      "title": "City placeholder",
+      "summary": "The placeholder for the city field.",
+      "valueType": {
+        "id": "text"
+      },
+      "locatable": false,
+      "locatorPriority": null,
+      "locatorParameter": false,
+      "readAssertable": true,
+      "valueAttribute": false,
+      "messageAttribute": false
+    },
+    {
+      "name": "country",
+      "attributeName": "country",
+      "title": "Country",
+      "summary": "The country detail for the address.If country-options is provided, this country value is selected by default. Maximum length is 80 characters.",
+      "valueType": {
+        "id": "text"
+      },
+      "locatable": false,
+      "locatorPriority": null,
+      "locatorParameter": true,
+      "readAssertable": true,
+      "valueAttribute": false,
+      "messageAttribute": false
+    },
+    {
+      "name": "countryDisabled",
+      "attributeName": "countryDisabled",
+      "title": "Country disabled",
+      "summary": "If present, the country field is disabled and users cannot interact with it.",
+      "valueType": {
+        "id": "boolean"
+      },
+      "locatable": false,
+      "locatorPriority": null,
+      "locatorParameter": false,
+      "readAssertable": true,
+      "valueAttribute": false,
+      "messageAttribute": false
+    },
+    {
+      "name": "countryLabel",
+      "attributeName": "countryLabel",
+      "title": "Country label",
+      "summary": "The label for the country field.",
+      "valueType": {
+        "id": "text"
+      },
+      "locatable": false,
+      "locatorPriority": null,
+      "locatorParameter": false,
+      "readAssertable": true,
+      "valueAttribute": false,
+      "messageAttribute": false
+    },
+    {
+      "name": "countryOptions",
+      "attributeName": "countryOptions",
+      "title": "Country options",
+      "summary": "The array of label-value pairs for the country. Displays a dropdown menu of options.",
+      "valueType": {
+        "id": "text"
+      },
+      "implementations": [
+        {
+          "javaScriptFunction": "lightningAttributes.AddressInput.countryOptions"
+        }
+      ],
+      "locatable": false,
+      "locatorPriority": null,
+      "locatorParameter": false,
+      "readAssertable": true,
+      "valueAttribute": false,
+      "messageAttribute": false
+    },
+    {
+      "name": "countryPlaceholder",
+      "attributeName": "countryPlaceholder",
+      "title": "Country placeholder",
+      "summary": "The placeholder for the country field.",
+      "valueType": {
+        "id": "text"
+      },
+      "locatable": false,
+      "locatorPriority": null,
+      "locatorParameter": false,
+      "readAssertable": true,
+      "valueAttribute": false,
+      "messageAttribute": false
+    },
+    {
+      "name": "disabled",
+      "attributeName": "disabled",
+      "title": "Disabled",
+      "summary": "If present, the address fields are disabled and users cannot interact with them.",
+      "valueType": {
+        "id": "boolean"
+      },
+      "locatable": false,
+      "locatorPriority": null,
+      "locatorParameter": false,
+      "readAssertable": true,
+      "valueAttribute": false,
+      "messageAttribute": false
+    },
+    {
+      "name": "fieldLevelHelp",
+      "attributeName": "fieldLevelHelp",
+      "title": "Field level help",
+      "summary": "Help text detailing the purpose and function of the input.",
+      "valueType": {
+        "id": "text"
+      },
+      "locatable": false,
+      "locatorPriority": null,
+      "locatorParameter": false,
+      "readAssertable": true,
+      "valueAttribute": false,
+      "messageAttribute": false
+    },
+    {
+      "name": "postalCode",
+      "attributeName": "postalCode",
+      "title": "Postal code",
+      "summary": "The value for postal code field. Maximum length is 20 characters.",
+      "valueType": {
+        "id": "text"
+      },
+      "locatable": false,
+      "locatorPriority": null,
+      "locatorParameter": true,
+      "readAssertable": true,
+      "valueAttribute": false,
+      "messageAttribute": false
+    },
+    {
+      "name": "postalCodeLabel",
+      "attributeName": "postalCodeLabel",
+      "title": "Postal code label",
+      "summary": "The label for the postal code field.",
+      "valueType": {
+        "id": "text"
+      },
+      "locatable": false,
+      "locatorPriority": null,
+      "locatorParameter": false,
+      "readAssertable": true,
+      "valueAttribute": false,
+      "messageAttribute": false
+    },
+    {
+      "name": "postalCodePlaceholder",
+      "attributeName": "postalCodePlaceholder",
+      "title": "Postal code placeholder",
+      "summary": "The placeholder for the postal code field.",
+      "valueType": {
+        "id": "text"
+      },
+      "locatable": false,
+      "locatorPriority": null,
+      "locatorParameter": false,
+      "readAssertable": true,
+      "valueAttribute": false,
+      "messageAttribute": false
+    },
+    {
+      "name": "province",
+      "attributeName": "province",
+      "title": "Province",
+      "summary": "The province field for the address. If province-options is provided, this province value is selected by default. Maximum length is 80 characters.",
+      "valueType": {
+        "id": "text"
+      },
+      "locatable": false,
+      "locatorPriority": null,
+      "locatorParameter": true,
+      "readAssertable": true,
+      "valueAttribute": false,
+      "messageAttribute": false
+    },
+    {
+      "name": "provinceLabel",
+      "attributeName": "provinceLabel",
+      "title": "Province label",
+      "summary": "The label for the province field.",
+      "valueType": {
+        "id": "text"
+      },
+      "locatable": false,
+      "locatorPriority": null,
+      "locatorParameter": false,
+      "readAssertable": true,
+      "valueAttribute": false,
+      "messageAttribute": false
+    },
+    {
+      "name": "provinceOptions",
+      "attributeName": "provinceOptions",
+      "title": "Province options",
+      "summary": "The array of label-value pairs for the province. Displays a dropdown menu of options.",
+      "valueType": {
+        "id": "text"
+      },
+      "implementations": [
+        {
+          "javaScriptFunction": "lightningAttributes.AddressInput.provinceOptions"
+        }
+      ],
+      "locatable": false,
+      "locatorPriority": null,
+      "locatorParameter": false,
+      "readAssertable": true,
+      "valueAttribute": false,
+      "messageAttribute": false
+    },
+    {
+      "name": "provincePlaceholder",
+      "attributeName": "provincePlaceholder",
+      "title": "Province placeholder",
+      "summary": "The placeholder for the province field.",
+      "valueType": {
+        "id": "text"
+      },
+      "locatable": false,
+      "locatorPriority": null,
+      "locatorParameter": false,
+      "readAssertable": true,
+      "valueAttribute": false,
+      "messageAttribute": false
+    },
+    {
+      "name": "readOnly",
+      "attributeName": "readOnly",
+      "title": "Read only",
+      "summary": "If present, the address fields are read-only and cannot be edited.",
+      "valueType": {
+        "id": "boolean"
+      },
+      "locatable": false,
+      "locatorPriority": null,
+      "locatorParameter": false,
+      "readAssertable": true,
+      "valueAttribute": false,
+      "messageAttribute": false
+    },
+    {
+      "name": "required",
+      "attributeName": "required",
+      "title": "Required",
+      "summary": "If present, the address fields must be filled before the form is submitted.",
+      "valueType": {
+        "id": "boolean"
+      },
+      "locatable": false,
+      "locatorPriority": null,
+      "locatorParameter": false,
+      "readAssertable": true,
+      "valueAttribute": false,
+      "messageAttribute": false
+    },
+    {
+      "name": "showAddressLookup",
+      "attributeName": "showAddressLookup",
+      "title": "Show address lookup",
+      "summary": "If present, address lookup using Google Maps is enabled.",
+      "valueType": {
+        "id": "text"
+      },
+      "locatable": false,
+      "locatorPriority": null,
+      "locatorParameter": false,
+      "readAssertable": true,
+      "valueAttribute": false,
+      "messageAttribute": false
+    },
+    {
+      "name": "street",
+      "attributeName": "street",
+      "title": "Street",
+      "summary": "The value for the street field. Maximum length is 255 characters.",
+      "valueType": {
+        "id": "text"
+      },
+      "locatable": false,
+      "locatorPriority": null,
+      "locatorParameter": true,
+      "readAssertable": true,
+      "valueAttribute": false,
+      "messageAttribute": false
+    },
+    {
+      "name": "streetLabel",
+      "attributeName": "streetLabel",
+      "title": "Street label",
+      "summary": "The label for the street field.",
+      "valueType": {
+        "id": "text"
+      },
+      "locatable": false,
+      "locatorPriority": null,
+      "locatorParameter": false,
+      "readAssertable": true,
+      "valueAttribute": false,
+      "messageAttribute": false
+    },
+    {
+      "name": "streetPlaceholder",
+      "attributeName": "streetPlaceholder",
+      "title": "Street placeholder",
+      "summary": "The placeholder for the street field.",
+      "valueType": {
+        "id": "text"
+      },
+      "locatable": false,
+      "locatorPriority": null,
+      "locatorParameter": false,
+      "readAssertable": true,
+      "valueAttribute": false,
+      "messageAttribute": false
+    },
+    {
+      "name": "Visible",
+      "attributeName": "",
+      "title": "Visible",
+      "summary": "Check the visibility of the element",
+      "valueType": {
+        "id": "boolean"
+      },
+      "implementations": [
+        {
+          "javaScriptFunction": "lightningAttributes.common.visible"
+        }
+      ],
+      "locatable": false,
+      "locatorPriority": null,
+      "readAssertable": true,
+      "valueAttribute": false,
+      "messageAttribute": false
+    }
+  ],
+  "slots": [],
+  "interactions": [
+    {
+      "name": "set",
+      "title": "Set",
+      "interactionType": "set",
+      "summary": "Set the values with string value with Provar Expressions.",
+      "remarks": null,
+      "defaultIf": null,
+      "hiddenIf": "return element.disabled || element.readOnly",
+      "defaultInteraction": true,
+      "testStepTitlePattern": "{label} field",
+      "parameters": [
+        {
+          "id": "streetValue",
+          "title": "Street Value",
+          "type": "text"
+        },
+        {
+          "id": "cityValue",
+          "title": "City Value",
+          "type": "text"
+        },
+        {
+          "id": "provinceValue",
+          "title": "Province Value",
+          "type": "text"
+        },
+        {
+          "id": "countryValue",
+          "title": "Country Value",
+          "type": "text"
+        },
+        {
+          "id": "postalCodeValue",
+          "title": "Postal Code Value",
+          "type": "text"
+        }
+      ],
+      "returnType": null,
+      "implementations": [
+        {
+          "javaScriptSnippet": "js::const street = element.shadowRoot.querySelector('lightning-textarea[data-field=\\'street\\']'); yield interactions.setAttribute(street.shadowRoot.querySelector('textarea'), 'value', arguments[1], ['input', 'blur'], 'Street'); let isPicklist = element.shadowRoot.querySelector('lightning-picklist[data-field=\\'country\\']'); isPicklist ? yield interactions.setForComboBox(isPicklist, arguments[4], 'Country') : yield interactions.setAttribute(element.shadowRoot.querySelector('lightning-input[data-field=\\'country\\']').shadowRoot.querySelector('lightning-primitive-input-simple'), 'value', arguments[4], ['input', 'blur'], 'Country'); yield interactions.setAttribute(element.shadowRoot.querySelector('lightning-input[data-field=\\'city\\']').shadowRoot.querySelector('lightning-primitive-input-simple'), 'value', arguments[2], ['input', 'blur'], 'City'); isPicklist = element.shadowRoot.querySelector('lightning-picklist[data-field=\\'province\\']'); isPicklist ? yield interactions.setForComboBox(isPicklist, arguments[3], 'Province') : yield interactions.setAttribute(element.shadowRoot.querySelector('lightning-input[data-field=\\'province\\']').shadowRoot.querySelector('lightning-primitive-input-simple'), 'value', arguments[3], ['input', 'blur'], 'Province'); yield interactions.setAttribute(element.shadowRoot.querySelector('lightning-input[data-field=\\'postalCode\\']').shadowRoot.querySelector('lightning-primitive-input-simple'), 'value', arguments[5], ['input', 'blur'], 'Postal Code');"
+        }
+      ]
+    },
+    {
+      "name": "setStreet",
+      "title": "Set Street",
+      "interactionType": "set",
+      "summary": "Set the street value with string value with Provar Expressions.",
+      "remarks": null,
+      "defaultIf": null,
+      "hiddenIf": "return element.disabled || element.readOnly",
+      "defaultInteraction": false,
+      "testStepTitlePattern": "{label} field",
+      "parameters": [
+        {
+          "id": "streetValue",
+          "title": "Value",
+          "type": "text"
+        }
+      ],
+      "returnType": null,
+      "implementations": [
+        {
+          "javaScriptSnippet": "js::const street = element.shadowRoot.querySelector('lightning-textarea[data-field=\\'street\\']'); yield interactions.setAttribute(street.shadowRoot.querySelector('textarea'), 'value', arguments[1], ['input', 'blur']);"
+        }
+      ]
+    },
+    {
+      "name": "setCity",
+      "title": "Set City",
+      "interactionType": "set",
+      "summary": "Set the city value with string value with Provar Expressions.",
+      "remarks": null,
+      "defaultIf": null,
+      "hiddenIf": "return element.disabled || element.readOnly",
+      "defaultInteraction": false,
+      "testStepTitlePattern": "{label} field",
+      "parameters": [
+        {
+          "id": "cityValue",
+          "title": "Value",
+          "type": "text"
+        }
+      ],
+      "returnType": null,
+      "implementations": [
+        {
+          "javaScriptSnippet": "js::yield interactions.setAttribute(element.shadowRoot.querySelector('lightning-input[data-field=\\'city\\']').shadowRoot.querySelector('lightning-primitive-input-simple'), 'value', arguments[1], ['input', 'blur']);"
+        }
+      ]
+    },
+    {
+      "name": "setProvince",
+      "title": "Set Province",
+      "interactionType": "set",
+      "summary": "Set the province value with string value with Provar Expressions.",
+      "remarks": null,
+      "defaultIf": null,
+      "hiddenIf": "return element.disabled || element.readOnly",
+      "defaultInteraction": false,
+      "testStepTitlePattern": "{label} field",
+      "parameters": [
+        {
+          "id": "provinceValue",
+          "title": "Value",
+          "type": "text"
+        }
+      ],
+      "returnType": null,
+      "implementations": [
+        {
+          "javaScriptSnippet": "js::const isPicklist = element.shadowRoot.querySelector('lightning-picklist[data-field=\\'province\\']'); isPicklist ? yield interactions.setForComboBox(isPicklist, arguments[1]) : yield interactions.setAttribute(element.shadowRoot.querySelector('lightning-input[data-field=\\'province\\']').shadowRoot.querySelector('lightning-primitive-input-simple'), 'value', arguments[1], ['input', 'blur']);"
+        }
+      ]
+    },
+    {
+      "name": "setCountry",
+      "title": "Set Country",
+      "interactionType": "set",
+      "summary": "Set the country value with string value with Provar Expressions.",
+      "remarks": null,
+      "defaultIf": null,
+      "hiddenIf": "return element.disabled || element.readOnly",
+      "defaultInteraction": false,
+      "testStepTitlePattern": "{label} field",
+      "parameters": [
+        {
+          "id": "countryValue",
+          "title": "Value",
+          "type": "text"
+        }
+      ],
+      "returnType": null,
+      "implementations": [
+        {
+          "javaScriptSnippet": "js::const isPicklist = element.shadowRoot.querySelector('lightning-picklist[data-field=\\'country\\']'); isPicklist ? yield interactions.setForComboBox(isPicklist, arguments[1]) : yield interactions.setAttribute(element.shadowRoot.querySelector('lightning-input[data-field=\\'country\\']').shadowRoot.querySelector('lightning-primitive-input-simple'), 'value', arguments[1], ['input', 'blur']);"
+        }
+      ]
+    },
+    {
+      "name": "setPostalCode",
+      "title": "Set Postal Code",
+      "interactionType": "set",
+      "summary": "Set the postal code value with string value with Provar Expressions.",
+      "remarks": null,
+      "defaultIf": null,
+      "hiddenIf": "return element.disabled || element.readOnly",
+      "defaultInteraction": false,
+      "testStepTitlePattern": "{label} field",
+      "parameters": [
+        {
+          "id": "postalCodeValue",
+          "title": "Value",
+          "type": "text"
+        }
+      ],
+      "returnType": null,
+      "implementations": [
+        {
+          "javaScriptSnippet": "js::yield interactions.setAttribute(element.shadowRoot.querySelector('lightning-input[data-field=\\'postalCode\\']').shadowRoot.querySelector('lightning-primitive-input-simple'), 'value', arguments[1], ['input', 'blur']);"
+        }
+      ]
+    }
+  ],
+  "elements": [
+    {
+      "componentId": "2cde8eb0-8bec-45b9-bd1d-67934470e2b4",
+      "type": "component::4a933947-ae5b-4e08-a40c-afe6aa1ae02e",
+      "label": "Legend",
+      "selectors": [
+        {
+          "xpath": ".//legend",
+          "priority": 0
+        }
+      ]
+    },
+    {
+      "componentId": "a2b2a1f3-c3f5-4b2a-9ee8-e3604fef26c9",
+      "type": "component::4a933947-ae5b-4e08-a40c-afe6aa1ae02e",
+      "label": "Country Field Label",
+      "selectors": [
+        {
+          "xpath": ".//lightning-picklist[@data-field='country']//label",
+          "priority": 0
+        }
+      ]
+    },
+    {
+      "componentId": "adbba84c-4c3a-43df-b914-b149a7e80575",
+      "type": "component::676ee3da-b718-4fe6-87d8-a0d8dcf56770",
+      "label": "Lightning Lookup Address",
+      "selectors": [
+        {
+          "xpath": ".//lightning-lookup-address",
+          "priority": 0
+        }
+      ]
+    },
+    {
+      "componentId": "7e623a39-92b3-4af3-91ab-14a2e73dc698",
+      "type": "component::4a933947-ae5b-4e08-a40c-afe6aa1ae02e",
+      "label": "Street Field Label",
+      "selectors": [
+        {
+          "xpath": ".//lightning-textarea[@data-field ='street']//label",
+          "priority": 0
+        }
+      ]
+    },
+    {
+      "componentId": "6f375ceb-daa1-4c8f-91b0-2257ac7cdc10",
+      "type": "component::4a933947-ae5b-4e08-a40c-afe6aa1ae02e",
+      "label": "City Field Label",
+      "selectors": [
+        {
+          "xpath": ".//lightning-input[@data-field='city']//label",
+          "priority": 0
+        }
+      ]
+    },
+    {
+      "componentId": "54dfbb1e-3234-484e-b3ab-598b9f864cc9",
+      "type": "component::4a933947-ae5b-4e08-a40c-afe6aa1ae02e",
+      "label": "Province Field Label",
+      "selectors": [
+        {
+          "xpath": ".//lightning-input[@data-field='province']//label",
+          "priority": 0
+        }
+      ]
+    },
+    {
+      "componentId": "147382ad-c69a-490b-94ec-8e5ae2a67434",
+      "type": "component::4a933947-ae5b-4e08-a40c-afe6aa1ae02e",
+      "label": "Province Field Label",
+      "selectors": [
+        {
+          "xpath": ".//lightning-picklist[@data-field='province']//label",
+          "priority": 1
+        }
+      ]
+    },
+    {
+      "componentId": "53aa6249-04c0-4d33-b7d7-2bca9b56ee33",
+      "type": "component::4a933947-ae5b-4e08-a40c-afe6aa1ae02e",
+      "label": "Country Field Label",
+      "selectors": [
+        {
+          "xpath": ".//lightning-input[@data-field='country']//label",
+          "priority": 0
+        }
+      ]
+    },
+    {
+      "componentId": "76be310e-a112-4d81-85ad-ccec7d5e88e9",
+      "type": "component::4a933947-ae5b-4e08-a40c-afe6aa1ae02e",
+      "label": "Postal Code Field Label",
+      "selectors": [
+        {
+          "xpath": ".//lightning-input[@data-field='postalCode']//label",
+          "priority": 0
+        }
+      ]
+    },
+    {
+      "componentId": "af3633b5-99c2-478d-ada6-ff3dd7ebcd51",
+      "type": "component::6b762b6b-1c07-4539-89a6-f77fecfaf162",
+      "label": "Street Error Message",
+      "selectors": [
+        {
+          "xpath": ".//lightning-textarea[@data-field='street']//div[contains(@class,'slds-form-element__help')]",
+          "priority": 0
+        }
+      ]
+    },
+    {
+      "componentId": "c9bbdfba-2444-449f-a8be-acd02ac4bb4f",
+      "type": "component::6b762b6b-1c07-4539-89a6-f77fecfaf162",
+      "label": "City Error Message",
+      "selectors": [
+        {
+          "xpath": ".//lightning-input[@data-field='city']//div[contains(@class,'slds-form-element__help')]",
+          "priority": 0
+        }
+      ]
+    },
+    {
+      "componentId": "37458392-3148-43e1-98f7-314a8bdc357d",
+      "type": "component::6b762b6b-1c07-4539-89a6-f77fecfaf162",
+      "label": "Province Error Message",
+      "selectors": [
+        {
+          "xpath": ".//lightning-input[@data-field='province']//div[contains(@class,'slds-form-element__help')]",
+          "priority": 0
+        }
+      ]
+    },
+    {
+      "componentId": "8d770dc4-aae4-464a-b0c7-b23490013467",
+      "type": "component::6b762b6b-1c07-4539-89a6-f77fecfaf162",
+      "label": "Country Error Message",
+      "selectors": [
+        {
+          "xpath": ".//lightning-input[@data-field='country']//div[contains(@class,'slds-form-element__help')]",
+          "priority": 0
+        }
+      ]
+    },
+    {
+      "componentId": "63eb49f5-8817-4356-b62c-e09ebf936654",
+      "type": "component::6b762b6b-1c07-4539-89a6-f77fecfaf162",
+      "label": "Postal Code Error Message",
+      "selectors": [
+        {
+          "xpath": ".//lightning-input[@data-field='postalCode']//div[contains(@class,'slds-form-element__help')]",
+          "priority": 0
+        }
+      ]
+    }
+  ]
+}

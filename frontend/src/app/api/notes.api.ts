@@ -11,6 +11,6 @@ export class NotesApiService {
     private http = inject(HttpClient);
 
     search(term: string): Observable<Note[]> {
-        return this.http.get<any>(`http://localhost:5000/api/note?search=${term}`);
+        return this.http.get<any>(`/api/api/note?search=${term}`);
     }
 }

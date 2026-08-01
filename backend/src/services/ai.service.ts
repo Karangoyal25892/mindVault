@@ -1,12 +1,11 @@
 
-import { env } from '../config/env';
 import OpenAI from 'openai';
+import { getOpenAIClient } from '../providers/openai.client';
 
-const OpenAi = new OpenAI({
-    apiKey: env.openAiApiKey,
-});
+let openaiClient: OpenAI | null = null;
 
 export const summarizeDocument = async (text: string | undefined | null) => {
+    const OpenAi = getOpenAIClient();
     const response = await OpenAi.chat.completions.create({
         model: "gpt-4.1-mini",
         temperature: 0.3,

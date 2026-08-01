@@ -1,11 +1,7 @@
-import OpenAI from "openai";
 import { env } from "../config/env";
+import { getOpenAIClient } from '../providers/openai.client';
 
-const provider = env.llm_provider;
-
-const openai = new OpenAI({
-    apiKey: env.openAiApiKey,
-});
+const provider = env.llmProvider;
 
 const buildPrompt = (question: string, context: string) => `
 You are a senior JavaScript automation engineer.
@@ -70,7 +66,8 @@ const generateWithOpenAI = async (
     question: string,
     context: string
 ): Promise<string> => {
-    const response = await openai.responses.create({
+    const openAi = getOpenAIClient();
+    const response = await openAi.responses.create({
         model: process.env.OPENAI_MODEL || "gpt-5.5",
         input: buildPrompt(question, context),
     });

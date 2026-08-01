@@ -1,63 +1,257 @@
 .knowledge-page {
-  max-width: 900px;
-  margin: 32px auto;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.assistant-card,
+.result-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
   padding: 24px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
 }
 
-input,
-textarea {
-  width: 100%;
-  margin-top: 12px;
-  padding: 12px;
-  font-size: 14px;
+.assistant-header {
+  margin-bottom: 24px;
+
+  h2 {
+    margin: 0;
+    font-size: 28px;
+    color: #111827;
+  }
+
+  p {
+    margin: 8px 0 0;
+    color: #6b7280;
+    font-size: 15px;
+  }
 }
 
-button {
-  margin-top: 12px;
-  padding: 10px 18px;
+.question-box,
+.component-box {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 18px;
+
+  label {
+    font-weight: 600;
+    color: #374151;
+
+    span {
+      font-weight: 400;
+      color: #9ca3af;
+      margin-left: 6px;
+    }
+  }
+
+  textarea,
+  input {
+    border: 1px solid #d1d5db;
+    border-radius: 12px;
+    padding: 12px 14px;
+    font-size: 15px;
+    outline: none;
+    background: #f9fafb;
+
+    &:focus {
+      border-color: #2563eb;
+      background: #ffffff;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+    }
+  }
+
+  textarea {
+    resize: vertical;
+  }
+}
+
+.ask-btn {
+  border: none;
+  border-radius: 12px;
+  padding: 12px 18px;
+  background: #2563eb;
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 600;
   cursor: pointer;
+
+  &:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
 }
 
-.answer,
-.code-section {
-  margin-top: 24px;
+.error-box {
+  margin-top: 16px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
 }
 
-pre {
-  background: #f5f5f5;
-  padding: 16px;
-  overflow: auto;
-  border-radius: 8px;
+.result-card {
+  h3 {
+    margin: 0 0 16px;
+    font-size: 20px;
+    color: #111827;
+  }
+}
+
+.answer-text {
+  margin: 0;
+  line-height: 1.7;
+  color: #374151;
+  white-space: pre-line;
+}
+
+.details-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 18px;
+
+  div {
+    background: #f9fafb;
+    border-radius: 12px;
+    padding: 14px;
+  }
+
+  span {
+    display: block;
+    font-size: 13px;
+    color: #6b7280;
+    margin-bottom: 4px;
+  }
+
+  strong {
+    color: #111827;
+  }
+}
+
+.summary-box {
+  background: #f9fafb;
+  border-radius: 12px;
+  padding: 14px;
+
+  span {
+    display: block;
+    font-size: 13px;
+    color: #6b7280;
+    margin-bottom: 6px;
+  }
+
+  p {
+    margin: 0;
+    color: #374151;
+    line-height: 1.6;
+  }
+}
+
+.snippet-list {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
 }
 
 .code-card {
-  margin-top: 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #0f172a;
 }
 
 .code-header {
   display: flex;
   justify-content: space-between;
+  gap: 16px;
   align-items: center;
+  padding: 14px 16px;
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+
+  h4 {
+    margin: 0;
+    color: #111827;
+    font-size: 15px;
+  }
+
+  span {
+    color: #6b7280;
+    font-size: 13px;
+  }
+
+  button {
+    border: 1px solid #d1d5db;
+    background: #ffffff;
+    border-radius: 8px;
+    padding: 7px 12px;
+    cursor: pointer;
+    font-weight: 600;
+  }
 }
 
-.error {
-  margin-top: 16px;
-  color: red;
+pre {
+  margin: 0;
+  padding: 18px;
+  overflow-x: auto;
+  color: #e5e7eb;
+  font-size: 14px;
+  line-height: 1.6;
 }
 
-.interaction-card {
-  margin-top: 24px;
-  padding: 20px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  background: #fafafa;
+.empty-state {
+  background: #ffffff;
+  border: 1px dashed #cbd5e1;
+  border-radius: 16px;
+  padding: 28px;
+  text-align: center;
+
+  h3 {
+    margin: 0;
+    font-size: 22px;
+    color: #111827;
+  }
+
+  p {
+    max-width: 640px;
+    margin: 10px auto 20px;
+    color: #6b7280;
+    line-height: 1.6;
+  }
 }
 
-.detail-row {
-  margin-bottom: 16px;
-}
+.example-questions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
 
-.detail-row strong {
-  display: block;
-  margin-bottom: 6px;
+  span {
+    width: 100%;
+    color: #6b7280;
+    font-size: 14px;
+    margin-bottom: 4px;
+  }
+
+  button {
+    border: 1px solid #d1d5db;
+    background: #f9fafb;
+    color: #374151;
+    border-radius: 999px;
+    padding: 9px 14px;
+    cursor: pointer;
+    font-size: 14px;
+
+    &:hover {
+      background: #eef2ff;
+      border-color: #2563eb;
+      color: #1d4ed8;
+    }
+  }
 }

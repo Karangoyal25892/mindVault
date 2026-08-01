@@ -1,15 +1,10 @@
-import OpenAI from "openai";
 import { pipeline } from "@xenova/transformers";
 import { env } from "../config/env";
+import { getOpenAIClient } from '../providers/openai.client';
 
-const provider = env.Embedding_provider || 'local';
+const provider = env.embeddingProvider || 'local';
 
 let extractor: any;
-
-const openai = new OpenAI({
-  apiKey: env.openAiApiKey,
-});
-
 const createLocalEmbedding = async (text: string): Promise<number[]> => {
   if (!extractor) {
     extractor = await pipeline(
@@ -27,8 +22,9 @@ const createLocalEmbedding = async (text: string): Promise<number[]> => {
 };
 
 const createOpenAIEmbedding = async (text: string): Promise<number[]> => {
+  const openai = getOpenAIClient();
   const response = await openai.embeddings.create({
-    model: env.openai_embedding_model || "text-embedding-3-small",
+    model: env.openAiEmbeddingModel || "text-embedding-3-small",
     input: text,
   });
 

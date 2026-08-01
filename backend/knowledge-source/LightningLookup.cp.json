@@ -1,0 +1,197 @@
+{
+  "componentId": "ca4ddc61-46c4-4d3e-beef-ab457702cf30",
+  "tagName": "lightning-lookup",
+  "qualifier": null,
+  "label": "Lightning Lookup",
+  "name": "json::/com/provar/salesforce/lwc/LightningLookup",
+  "type": "container",
+  "instanceLabelExpressions": [
+    "{label} field"
+  ],
+  "pageStructureElement": false,
+  "fieldDetailsElement": true,
+  "attributes": [
+    {
+      "name": "fieldName",
+      "attributeName": "fieldName",
+      "title": "Field name",
+      "summary": "Specifies the fieldName of the lookup.",
+      "valueType": {
+        "id": "text"
+      },
+      "locatable": true,
+      "locatorPriority": 1,
+      "readAssertable": true,
+      "valueAttribute": false,
+      "messageAttribute": false
+    },
+    {
+      "name": "Class",
+      "attributeName": "class",
+      "title": "Class",
+      "summary": "The class attribute specifies one or more classnames for an element.",
+      "valueType": {
+        "id": "text"
+      },
+      "locatable": true,
+      "locatorPriority": null,
+      "readAssertable": true,
+      "valueAttribute": false,
+      "messageAttribute": false
+    },
+    {
+      "name": "Visible",
+      "attributeName": "",
+      "title": "Visible",
+      "summary": "Check the visibility of the element",
+      "valueType": {
+        "id": "boolean"
+      },
+      "implementations": [
+        {
+          "javaScriptFunction": "lightningAttributes.common.visible"
+        }
+      ],
+      "locatable": false,
+      "locatorPriority": null,
+      "readAssertable": true,
+      "valueAttribute": false,
+      "messageAttribute": false
+    },
+    {
+      "name": "disabled",
+      "attributeName": "disabled",
+      "title": "Disabled",
+      "summary": "If present, the lookup is disabled and users cannot interact with it.",
+      "valueType": {
+        "id": "boolean"
+      },
+      "locatable": false,
+      "locatorPriority": null,
+      "readAssertable": true,
+      "valueAttribute": false,
+      "messageAttribute": false
+    },
+    {
+      "name": "label",
+      "attributeName": "label",
+      "title": "Label",
+      "summary": "Text label for the lookup.",
+      "valueType": {
+        "id": "text"
+      },
+      "locatable": true,
+      "locatorPriority": 2,
+      "locatorParameter": true,
+      "readAssertable": true,
+      "valueAttribute": false,
+      "messageAttribute": false
+    },
+    {
+      "name": "required",
+      "attributeName": "required",
+      "title": "Required",
+      "summary": "If present, a value must be selected before the form can be submitted.",
+      "valueType": {
+        "id": "boolean"
+      },
+      "locatable": false,
+      "locatorPriority": null,
+      "locatorParameter": false,
+      "readAssertable": true,
+      "valueAttribute": false,
+      "messageAttribute": false
+    },
+    {
+      "name": "value",
+      "attributeName": "value",
+      "title": "Value",
+      "summary": "The field's inputMode",
+      "valueType": {
+        "id": "text"
+      },
+      "implementations": [
+        {
+          "javaScriptFunction": "lightningAttributes.Lookup.value"
+        }
+      ],
+      "locatable": false,
+      "locatorPriority": null,
+      "readAssertable": true,
+      "valueAttribute": false,
+      "messageAttribute": false
+    },
+    {
+      "name": "TextValue",
+      "attributeName": "",
+      "title": "Text Value",
+      "summary": "",
+      "valueType": {
+        "id": "text",
+        "constraints": []
+      },
+      "implementations": [
+        {
+          "javaScriptFunction": "lightningAttributes.Lookup.TextValue"
+        }
+      ],
+      "locatable": false,
+      "locatorPriority": 0,
+      "readAssertable": true,
+      "valueAttribute": false,
+      "messageAttribute": false
+    }
+  ],
+  "slots": [],
+  "interactions": [
+    {
+      "name": "set",
+      "title": "Set",
+      "interactionType": "set",
+      "summary": "Set the value with text value.",
+      "remarks": null,
+      "defaultIf": null,
+      "hiddenIf": "return element.disabled || element.readOnly",
+      "defaultInteraction": true,
+      "testStepTitlePattern": "{label} field",
+      "parameters": [
+        {
+          "id": "value",
+          "title": "Value",
+          "type": "TEXT"
+        }
+      ],
+      "returnType": null,
+      "implementations": [
+        {
+          "javaScriptSnippet": "js::yield interactions.setForLightningLookUp(element,arguments[1]);"
+        }
+      ]
+    },
+    {
+      "name": "showAllResults",
+      "title": "Show All Results",
+      "interactionType": "set",
+      "summary": "Set the value with text value.",
+      "remarks": null,
+      "defaultIf": null,
+      "hiddenIf": "return element.disabled || element.readOnly",
+      "defaultInteraction": false,
+      "testStepTitlePattern": "{label} field",
+      "parameters": [
+        {
+          "id": "value",
+          "title": "Value",
+          "type": "TEXT"
+        }
+      ],
+      "returnType": null,
+      "implementations": [
+        {
+          "javaScriptSnippet": "js::yield interactions.showAllResultsForLightningLookUp(element,arguments[1]);"
+        }
+      ]
+    }
+  ],
+  "elements": []
+}
