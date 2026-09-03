@@ -111,7 +111,11 @@ export const semanticSearchKnowledge = async (query: string, topK = 5, component
             { tagName: { $regex: componentName, $options: 'i' } },
         ];
     }
-    const chunks = await KnowledgeChunk.find(dbQuery);
+    // Score using a lean projection first - `content` can be several KB per chunk
+    // and isn't needed until we know which handful of chunks actually win.
+    const chunks = await KnowledgeChunk.find(dbQuery, {
+        content: 0,
+    });
     const rankedChunks = chunks
         .map((chunk) => ({
             chunk,
@@ -120,11 +124,40 @@ export const semanticSearchKnowledge = async (query: string, topK = 5, component
         .sort((a, b) => b.score - a.score)
         .slice(0, topK);
 
-    return rankedChunks;
+    if (rankedChunks.length === 0) {
+        return rankedChunks;
+    }
+
+    // Refetch only the winning chunks with their full content.
+    const winningIds = rankedChunks.map((result) => result.chunk._id);
+    const fullChunksById = new Map(
+        (await KnowledgeChunk.find({ _id: { $in: winningIds } })).map((chunk) => [
+            chunk._id.toString(),
+            chunk,
+        ])
+    );
+
+    return rankedChunks.map((result) => ({
+        ...result,
+        chunk: fullChunksById.get(result.chunk._id.toString()) || result.chunk,
+    }));
 };
 
 
+const ASK_CACHE_TTL_MS = 10 * 60 * 1000;
+const askCache = new Map<string, { expiresAt: number; result: any }>();
+
+const getAskCacheKey = (query: string, componentName?: string) =>
+    `${query.trim().toLowerCase()}::${(componentName || '').trim().toLowerCase()}`;
+
 export const askKnowledge = async (query: string, componentName?: string) => {
+    const cacheKey = getAskCacheKey(query, componentName);
+    const cached = askCache.get(cacheKey);
+
+    if (cached && cached.expiresAt > Date.now()) {
+        return cached.result;
+    }
+
     const semanticResults = await semanticSearchKnowledge(query, 3, componentName);
     const topInteractionResults = semanticResults.filter(
         result => result.chunk.chunkType === "interaction"
@@ -150,7 +183,7 @@ export const askKnowledge = async (query: string, componentName?: string) => {
         .map((result) => result.chunk.content)
         .join("\n\n--------------------\n\n");
     const answer = await generateAnswer(query, context);
-    return {
+    const result = {
         answer,
         interaction: {
             component: topInteraction.chunk.componentName,
@@ -166,4 +199,8 @@ export const askKnowledge = async (query: string, componentName?: string) => {
             linkedFrom: result.linkedFrom,
         })),
     };
+
+    askCache.set(cacheKey, { expiresAt: Date.now() + ASK_CACHE_TTL_MS, result });
+
+    return result;
 };
