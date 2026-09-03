@@ -64,23 +64,58 @@ const getRelatedJsChunks = async (results: KnowledgeSearchResult[]): Promise<Kno
     return relatedChunks;
 };
 
+const NAME_MATCH_BOOST = 0.2;
+const TITLE_PHRASE_BOOST_PER_WORD = 0.3;
+const TITLE_WORDSOUP_BOOST_PER_WORD = 0.15;
+
+const getLexicalBoost = (normalizedQuery: string, queryWords: string[], chunk: any): number => {
+    const interactionName = chunk.metadata?.interactionName?.toLowerCase();
+    const interactionTitle = chunk.metadata?.interactionTitle?.toLowerCase();
+
+    let boost = 0;
+
+    if (interactionName && queryWords.includes(interactionName)) {
+        boost += NAME_MATCH_BOOST;
+    }
+
+    if (interactionTitle) {
+        const titleWords = interactionTitle.split(/\s+/).filter(Boolean);
+
+        if (titleWords.length > 0) {
+            if (normalizedQuery.includes(interactionTitle)) {
+                // Whole title appears as a contiguous phrase in the query - most specific match.
+                boost += TITLE_PHRASE_BOOST_PER_WORD * titleWords.length;
+            } else if (titleWords.every((word: string) => queryWords.includes(word))) {
+                // All title words present, but scattered - weaker match.
+                boost += TITLE_WORDSOUP_BOOST_PER_WORD * titleWords.length;
+            }
+        }
+    }
+
+    return boost;
+};
+
 export const semanticSearchKnowledge = async (query: string, topK = 5, componentName: string | undefined) => {
     const queryEmbedding = await createEmbedding(query);
+    const normalizedQuery = query.toLowerCase();
+    const queryWords = normalizedQuery
+        .split(/[^a-z0-9]+/)
+        .filter(Boolean);
     const dbQuery: any = {
         embedding: { $exists: true, $ne: [] },
     };
 
     if (componentName) {
-        dbQuery.componentName = {
-            $regex: componentName,
-            $options: 'i',
-        };
+        dbQuery.$or = [
+            { componentName: { $regex: componentName, $options: 'i' } },
+            { tagName: { $regex: componentName, $options: 'i' } },
+        ];
     }
     const chunks = await KnowledgeChunk.find(dbQuery);
     const rankedChunks = chunks
         .map((chunk) => ({
             chunk,
-            score: cosineSimilarity(queryEmbedding, chunk.embedding || []),
+            score: cosineSimilarity(queryEmbedding, chunk.embedding || []) + getLexicalBoost(normalizedQuery, queryWords, chunk),
         }))
         .sort((a, b) => b.score - a.score)
         .slice(0, topK);
